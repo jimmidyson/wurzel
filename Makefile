@@ -20,6 +20,10 @@ test:
 	@echo ">> running tests"
 	@$(GO) test -short $(pkgs)
 
+bench:
+	@echo ">> running benchmarks"
+	@$(GO) test -bench=. -benchmem $(pkgs)
+
 format:
 	@echo ">> formatting code"
 	@$(GO) fmt $(pkgs)
