@@ -1,11 +1,11 @@
-package main
+package console
 
 import (
 	ui "github.com/gizak/termui"
 	"github.com/jimmidyson/wurzel/node"
 )
 
-func main() {
+func Run() {
 	if err := ui.Init(); err != nil {
 		panic(err)
 	}
