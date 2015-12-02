@@ -10,6 +10,11 @@ func Node() (*v1.Node, error) {
 		return nil, err
 	}
 
+	times, err := CPUTime()
+	if err != nil {
+		return nil, err
+	}
+
 	mem, err := Memory()
 	if err != nil {
 		return nil, err
@@ -22,6 +27,7 @@ func Node() (*v1.Node, error) {
 
 	return &v1.Node{
 		CPUInfo: cpu,
+		CPUTime: times,
 		Memory:  mem,
 		Swap:    swap,
 	}, nil

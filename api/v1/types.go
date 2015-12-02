@@ -1,12 +1,13 @@
 package v1
 
 type Node struct {
-	CPUInfo []CPUInfo `json:"cpuinfo"`
-	Memory  *Memory   `json:"memory"`
-	Swap    *Swap     `json:"memory"`
+	CPUInfo []NodeCPUInfo `json:"cpuinfo"`
+	CPUTime []NodeCPUTime `json:"cputime"`
+	Memory  *NodeMemory   `json:"memory"`
+	Swap    *NodeSwap     `json:"memory"`
 }
 
-type CPUInfo struct {
+type NodeCPUInfo struct {
 	CPU        int32    `json:"cpu"`
 	VendorID   string   `json:"vendor_id"`
 	Family     string   `json:"family"`
@@ -21,7 +22,22 @@ type CPUInfo struct {
 	Flags      []string `json:"flags"`
 }
 
-type Memory struct {
+type NodeCPUTime struct {
+	CPU       string  `json:"cpu"`
+	User      float64 `json:"user"`
+	System    float64 `json:"system"`
+	Idle      float64 `json:"idle"`
+	Nice      float64 `json:"nice"`
+	Iowait    float64 `json:"iowait"`
+	Irq       float64 `json:"irq"`
+	Softirq   float64 `json:"softirq"`
+	Steal     float64 `json:"steal"`
+	Guest     float64 `json:"guest"`
+	GuestNice float64 `json:"guest_nice"`
+	Stolen    float64 `json:"stolen"`
+}
+
+type NodeMemory struct {
 	Total       uint64  `json:"total"`
 	Available   uint64  `json:"available"`
 	Used        uint64  `json:"used"`
@@ -35,7 +51,7 @@ type Memory struct {
 	Shared      uint64  `json:"shared"`
 }
 
-type Swap struct {
+type NodeSwap struct {
 	Total       uint64  `json:"total"`
 	Used        uint64  `json:"used"`
 	Free        uint64  `json:"free"`

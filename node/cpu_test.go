@@ -25,3 +25,27 @@ func BenchmarkCPUInfo(b *testing.B) {
 		}
 	}
 }
+
+func TestCPUTime(t *testing.T) {
+	v, err := CPUTime()
+	if err != nil {
+		t.Errorf("error %v", err)
+	}
+	if len(v) == 0 {
+		t.Errorf("could not get CPU Time")
+	}
+	for _, vv := range v {
+		if vv.System == 0 {
+			t.Errorf("could not get CPU Time: %v", vv)
+		}
+	}
+}
+
+func BenchmarkCPUTime(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, err := CPUTime()
+		if err != nil {
+			b.Errorf("error %v", err)
+		}
+	}
+}

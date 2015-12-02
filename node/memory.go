@@ -5,13 +5,13 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
-func Memory() (*v1.Memory, error) {
+func Memory() (*v1.NodeMemory, error) {
 	mi, err := mem.VirtualMemory()
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.Memory{
+	return &v1.NodeMemory{
 		Total:       mi.Total,
 		Available:   mi.Available,
 		Used:        mi.Used,
@@ -26,13 +26,13 @@ func Memory() (*v1.Memory, error) {
 	}, nil
 }
 
-func Swap() (*v1.Swap, error) {
+func Swap() (*v1.NodeSwap, error) {
 	mi, err := mem.SwapMemory()
 	if err != nil {
 		return nil, err
 	}
 
-	return &v1.Swap{
+	return &v1.NodeSwap{
 		Total:       mi.Total,
 		Used:        mi.Used,
 		Free:        mi.Free,
