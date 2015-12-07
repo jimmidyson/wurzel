@@ -1,17 +1,19 @@
 machine:
   environment:
+    GOPATH: "~/.go_workspace/"
     IMPORT_PATH: "github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+    PROJECT_PATH: "$GOPATH/src/$IMPORT_PATH"
 
 checkout:
   post:
-    - mkdir -p "~/.go_workspace/src/$IMPORT_PATH"
-    - rsync -azC --delete ./ "~/.go_workspace/src/$IMPORT_PATH/"
+    - mkdir -p "$PROJECT_PATH"
+    - rsync -azC --delete ./ "$PROJECT_PATH"
 
 dependencies:
   override:
-    - cd "~/.go_workspace/src/$IMPORT_PATH/" && make build
+    - cd "$PROJECT_PATH" && make build
 
 test:
   override:
-    - cd "~/.go_workspace/src/$IMPORT_PATH/" && make ci
-    - cd "~/.go_workspace/src/$IMPORT_PATH/" && make bench
+    - cd "$PROJECT_PATH" && make ci
+    - cd "$PROJECT_PATH" && make bench
