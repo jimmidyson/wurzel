@@ -8,12 +8,14 @@ checkout:
   post:
     - mkdir -p "$PROJECT_PATH"
     - rsync -azC --delete ./ "$PROJECT_PATH"
+    - cd "$PROJECT_PATH"
 
 dependencies:
   override:
-    - cd "$PROJECT_PATH" && make build
+    - make build
+    - mv wurzel "$CIRCLE_ARTIFACTS"
 
 test:
   override:
-    - cd "$PROJECT_PATH" && make ci
-    - cd "$PROJECT_PATH" && make bench
+    - make ci
+    - make bench
