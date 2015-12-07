@@ -1,3 +1,9 @@
+checkout:
+  post:
+    - rm -rf $HOME/.go_workspace/src/github.com/jimmidyson/*
+    - mkdir -p $HOME/.go_workspace/src/github.com/jimmidyson
+    - ln -snf $HOME/$CIRCLE_PROJECT_REPONAME $HOME/.go_workspace/src/github.com/jimmidyson
+
 dependencies:
   override:
     - make build
