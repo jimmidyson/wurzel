@@ -4,16 +4,15 @@ machine:
 
 checkout:
   post:
-    - mkdir -p "$GOPATH/src/$IMPORT_PATH"
-    - rsync -azC --delete ./ "$GOPATH/src/$IMPORT_PATH/"
+    - mkdir -p "~/.go_workspace/src/$IMPORT_PATH"
+    - rsync -azC --delete ./ "~/.go_workspace/src/$IMPORT_PATH/"
+    - cd "~/.go_workspace/src/$IMPORT_PATH/"
 
 dependencies:
   override:
-    - cd "$GOPATH/src/$IMPORT_PATH/"
     - make build
 
 test:
   override:
-    - cd "$GOPATH/src/$IMPORT_PATH/"
     - make ci
     - make bench
