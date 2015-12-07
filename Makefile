@@ -18,7 +18,7 @@ all: format build test
 
 test:
 	@echo ">> running tests"
-	@$(GO) test -short $(pkgs)
+	@$(GO) test -short -race $(pkgs)
 
 bench:
 	@echo ">> running benchmarks"
@@ -39,4 +39,10 @@ build:
 docker:
 	@docker build -t wurzel:$(shell git rev-parse --short HEAD) .
 
-.PHONY: all format build test vet docker
+ci-deps:
+	@go get -u github.com/jstemmer/go-junit-report
+
+ci: ci-deps
+	@$(GO) test -short -race -v $(pkgs) | go-junit-report > report.xml
+
+.PHONY: all format build test vet docker ci ci-deps
