@@ -43,6 +43,6 @@ ci-deps:
 	@go get -u github.com/jstemmer/go-junit-report
 
 ci: ci-deps
-	@$(GO) test -short -race -v $(pkgs) | go-junit-report > report.xml
+	@$(GO) test -short -race -v $(pkgs) | go-junit-report > $CIRCLE_TEST_REPORTS/wurzel/report.xml
 
 .PHONY: all format build test vet docker ci ci-deps
