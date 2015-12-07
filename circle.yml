@@ -3,13 +3,14 @@ checkout:
     - rm -rf $HOME/.go_workspace/src/github.com/jimmidyson/*
     - mkdir -p $HOME/.go_workspace/src/github.com/jimmidyson
     - ln -snf $HOME/$CIRCLE_PROJECT_REPONAME $HOME/.go_workspace/src/github.com/jimmidyson
-    - cd $HOME/.go_workspace/src/github.com/jimmidyson/$CIRCLE_PROJECT_REPONAME
 
 dependencies:
   override:
+    - cd $HOME/.go_workspace/src/github.com/jimmidyson/$CIRCLE_PROJECT_REPONAME
     - make build
 
 test:
   override:
+    - cd $HOME/.go_workspace/src/github.com/jimmidyson/$CIRCLE_PROJECT_REPONAME
     - make ci
     - make bench
