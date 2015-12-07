@@ -2,7 +2,7 @@ package v1
 
 type Node struct {
 	CPUInfo []NodeCPUInfo `json:"cpuinfo"`
-	CPUTime []NodeCPUTime `json:"cputime"`
+	CPUTime []CPUTime     `json:"cputime"`
 	Memory  *NodeMemory   `json:"memory"`
 	Swap    *NodeSwap     `json:"memory"`
 }
@@ -22,7 +22,7 @@ type NodeCPUInfo struct {
 	Flags      []string `json:"flags"`
 }
 
-type NodeCPUTime struct {
+type CPUTime struct {
 	CPU       string  `json:"cpu"`
 	User      float64 `json:"user"`
 	System    float64 `json:"system"`
@@ -58,4 +58,33 @@ type NodeSwap struct {
 	UsedPercent float64 `json:"used_percent"`
 	Sin         uint64  `json:"sin"`
 	Sout        uint64  `json:"sout"`
+}
+
+type Process struct {
+	Pid      int32            `json:"pid"`
+	Name     string           `json:"name"`
+	Status   string           `json:"status"`
+	Uids     []int32          `json:"uids"`
+	Gids     []int32          `json:"gids"`
+	Threads  int32            `json:"threads"`
+	Memory   *ProcessMemory   `json:"memory"`
+	MemoryEx *ProcessMemoryEx `json:"memoryex,omitempty"`
+	CPUTime  *CPUTime         `json:"cputime"`
+	Created  int64            `json:"created"`
+}
+
+type ProcessMemory struct {
+	RSS  uint64 `json:"rss"`
+	VMS  uint64 `json:"vms"`
+	Swap uint64 `json:"swap"`
+}
+
+type ProcessMemoryEx struct {
+	RSS    uint64 `json:"rss"`
+	VMS    uint64 `json:"vms"`
+	Shared uint64 `json:"shared"`
+	Text   uint64 `json:"text"`
+	Lib    uint64 `json:"lib"`
+	Data   uint64 `json:"data"`
+	Dirty  uint64 `json:"dirty"`
 }

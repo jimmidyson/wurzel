@@ -31,16 +31,16 @@ func CPUInfo() ([]v1.NodeCPUInfo, error) {
 	return ret, nil
 }
 
-func CPUTime() ([]v1.NodeCPUTime, error) {
+func CPUTime() ([]v1.CPUTime, error) {
 	times, err := cpu.CPUTimes(true)
 	if err != nil {
 		return nil, err
 	}
 
-	ret := make([]v1.NodeCPUTime, len(times))
+	ret := make([]v1.CPUTime, len(times))
 
 	for i, time := range times {
-		ret[i] = v1.NodeCPUTime{
+		ret[i] = v1.CPUTime{
 			CPU:       time.CPU,
 			User:      time.User,
 			System:    time.System,

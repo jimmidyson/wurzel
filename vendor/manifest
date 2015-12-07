@@ -24,13 +24,13 @@
 		{
 			"importpath": "github.com/gizak/termui",
 			"repository": "https://github.com/gizak/termui",
-			"revision": "a302a528a807232d794aabb0479ab14a6ac601a8",
+			"revision": "47e145b445d82346ece1bc3734bb579439f0128e",
 			"branch": "master"
 		},
 		{
 			"importpath": "github.com/golang/protobuf/proto",
 			"repository": "https://github.com/golang/protobuf",
-			"revision": "221834dcb89c96e4b057ed8bb878bfe569dfacf4",
+			"revision": "68415e7123da32b07eab49c96d2c4d6158360e9b",
 			"branch": "master",
 			"path": "/proto"
 		},
@@ -84,10 +84,11 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/prometheus/client_golang",
+			"importpath": "github.com/prometheus/client_golang/prometheus",
 			"repository": "https://github.com/prometheus/client_golang",
 			"revision": "67994f177195311c3ea3d4407ed0175e34a4256f",
-			"branch": "master"
+			"branch": "master",
+			"path": "/prometheus"
 		},
 		{
 			"importpath": "github.com/prometheus/client_model/go",
@@ -126,7 +127,7 @@
 		{
 			"importpath": "github.com/russross/blackfriday",
 			"repository": "https://github.com/russross/blackfriday",
-			"revision": "300106c228d52c8941d4b3de6054a6062a86dda3",
+			"revision": "e3cbadc5c960894017d53ecf49dba4c361dacddf",
 			"branch": "master"
 		},
 		{
@@ -172,16 +173,9 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "golang.org/x/net/context",
-			"repository": "https://go.googlesource.com/net",
-			"revision": "195180cfebf7362bd243a52477697895128c8777",
-			"branch": "master",
-			"path": "/context"
-		},
-		{
 			"importpath": "golang.org/x/net/websocket",
 			"repository": "https://go.googlesource.com/net",
-			"revision": "195180cfebf7362bd243a52477697895128c8777",
+			"revision": "d5cd7348bfebdf7dbb6dbb18fa488525f9024293",
 			"branch": "master",
 			"path": "/websocket"
 		},
