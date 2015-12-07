@@ -22,7 +22,7 @@ func BenchmarkMemory(b *testing.B) {
 }
 
 func TestSwap(t *testing.T) {
-	v, err := Swap()
+	_, err := Swap()
 	if err != nil {
 		t.Errorf("error %v", err)
 	}
