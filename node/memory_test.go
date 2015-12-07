@@ -26,9 +26,6 @@ func TestSwap(t *testing.T) {
 	if err != nil {
 		t.Errorf("error %v", err)
 	}
-	if v.Total == 0 {
-		t.Errorf("could not get Swap stats: %v", v)
-	}
 }
 
 func BenchmarkSwap(b *testing.B) {
