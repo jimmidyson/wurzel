@@ -44,6 +44,6 @@ ci-deps:
 
 ci: ci-deps
 	mkdir -p $$CIRCLE_TEST_REPORTS/wurzel/
-	@$(GO) test -short -race -v $(pkgs) | go-junit-report > $$CIRCLE_TEST_REPORTS/wurzel/report.xml
+	@$(GO) test -short -race -v $(pkgs) | go-junit-report > $$CIRCLE_TEST_REPORTS/junit/junit.xml
 
 .PHONY: all format build test vet docker ci ci-deps
