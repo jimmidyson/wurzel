@@ -1,13 +1,26 @@
 package console
 
 import (
+	log "github.com/Sirupsen/logrus"
 	ui "github.com/gizak/termui"
+
+	"github.com/jimmidyson/wurzel/cgroup"
 	"github.com/jimmidyson/wurzel/node"
 )
 
 func Run() {
-	if err := ui.Init(); err != nil {
-		panic(err)
+	w, err := cgroup.NewWatcher("memory", "cpu", "cpuacct", "blkio")
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = w.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = ui.Init()
+	if err != nil {
+		log.Fatal(err)
 	}
 	defer ui.Close()
 

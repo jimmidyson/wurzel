@@ -15,21 +15,58 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"time"
 
+	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus/formatters/logstash"
 	"github.com/spf13/cobra"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
-var RootCmd = &cobra.Command{
-	Use:   "wurzel",
-	Short: "Combining & harvesting metrics from various sources",
-	Long:  `Combining & harvesting metrics from various sources.`,
+var (
+	RootCmd = &cobra.Command{
+		Use:   "wurzel",
+		Short: "Combining & harvesting metrics from various sources",
+		Long:  `Combining & harvesting metrics from various sources.`,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if verbose {
+				log.SetLevel(log.DebugLevel)
+			}
+			var formatter log.Formatter = &prefixed.TextFormatter{
+				TimestampFormat: time.RFC3339Nano,
+			}
+			if logJson {
+				formatter = &logstash.LogstashFormatter{Type: "wurzel"}
+			}
+			log.SetFormatter(formatter)
+			if logFile != "" {
+				f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+				if err != nil {
+					log.Fatal(err)
+				}
+				if !logJson {
+					log.SetFormatter(&prefixed.TextFormatter{
+						TimestampFormat: time.RFC3339Nano,
+						DisableColors:   true,
+					})
+				}
+				log.SetOutput(f)
+			}
+		},
+	}
+	verbose bool
+	logFile string
+	logJson bool
+)
+
+func init() {
+	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	RootCmd.PersistentFlags().BoolVar(&logJson, "log-json", false, "log in JSON format")
 }
 
 func main() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
+		log.Fatal(err)
 	}
 }

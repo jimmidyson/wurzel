@@ -2,11 +2,11 @@ package cgroup
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/docker/libcontainer/cgroups"
 	"gopkg.in/fsnotify.v1"
 )
@@ -65,7 +65,7 @@ func (w *watcher) watchCgroup(cgroup string, mounts []cgroups.Mount) error {
 						if err != nil {
 							return err
 						}
-						fmt.Printf("Watching %s\n", path)
+						log.WithFields(log.Fields{"target": path}).Debug("Start watching cgroup dir")
 					}
 					return nil
 				})
@@ -85,23 +85,31 @@ func (w *watcher) handleEvents() {
 			switch {
 			case event.Op&fsnotify.Create == fsnotify.Create:
 				go func() {
-					fmt.Println("Start watching", event.Name)
+					log.WithFields(log.Fields{"target": event.Name}).Debug("Start watching cgroup dir")
 					err := w.fsnotifyWatcher.Add(event.Name)
 					if err != nil {
-						log.Fatal(err)
+						log.WithFields(log.Fields{
+							"target": event.Name,
+							"error":  err,
+						}).Error("Failed to add watch")
 					}
 				}()
 			case event.Op&fsnotify.Remove == fsnotify.Remove:
 				go func() {
-					fmt.Println("Stop watching", event.Name)
+					log.WithFields(log.Fields{"target": event.Name}).Debug("Stop watching cgroup dir")
 					err := w.fsnotifyWatcher.Remove(event.Name)
 					if err != nil {
-						log.Fatal(err)
+						log.WithFields(log.Fields{
+							"target": event.Name,
+							"error":  err,
+						}).Error("Failed to remove watch")
 					}
 				}()
 			}
 		case err := <-w.fsnotifyWatcher.Errors:
-			log.Println("error:", err)
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Error("Received notify error")
 		case <-w.done:
 			return
 		}
