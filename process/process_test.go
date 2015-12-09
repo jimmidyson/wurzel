@@ -31,10 +31,10 @@ func TestProcesses(t *testing.T) {
 	}
 	for _, vv := range v {
 		if vv.Memory == nil {
-			t.Errorf("could not get Processes memory: %v", v)
+			t.Errorf("could not get Processes memory: %#v", v)
 		}
 		if vv.MemoryEx == nil {
-			t.Errorf("could not get Processes memory ex: %v", v)
+			t.Errorf("could not get Processes memory ex: %#v", v)
 		}
 	}
 }

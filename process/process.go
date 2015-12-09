@@ -1,8 +1,6 @@
 package process
 
 import (
-	"fmt"
-
 	"github.com/jimmidyson/wurzel/api/v1"
 	"github.com/shirou/gopsutil/process"
 )
@@ -17,8 +15,8 @@ func Processes() ([]v1.Process, error) {
 		return nil, err
 	}
 
-	processes := make([]v1.Process, len(pids))
-	for i, pid := range pids {
+	processes := make([]v1.Process, 0, len(pids))
+	for _, pid := range pids {
 		p, err := process.NewProcess(pid)
 		if err != nil {
 			continue
@@ -26,32 +24,32 @@ func Processes() ([]v1.Process, error) {
 
 		name, err := p.Name()
 		if err != nil {
-			return nil, fmt.Errorf("could not get process name for pid %d: %v", pid, err)
+			continue
 		}
 
 		status, err := p.Status()
 		if err != nil {
-			return nil, fmt.Errorf("could not get process status for pid %d: %v", pid, err)
+			continue
 		}
 
 		uids, err := p.Uids()
 		if err != nil && !isNotImplementedError(err) {
-			return nil, fmt.Errorf("could not get process uids for pid %d: %v", pid, err)
+			continue
 		}
 
 		gids, err := p.Gids()
 		if err != nil && !isNotImplementedError(err) {
-			return nil, fmt.Errorf("could not get process for pid %d: %v", pid, err)
+			continue
 		}
 
 		threads, err := p.NumThreads()
 		if err != nil && !isNotImplementedError(err) {
-			return nil, fmt.Errorf("could not get process number of threads for pid %d: %v", pid, err)
+			continue
 		}
 
 		memoryInfo, err := p.MemoryInfo()
 		if err != nil && !isNotImplementedError(err) {
-			return nil, fmt.Errorf("could not get process memory info for pid %d: %v", pid, err)
+			continue
 		}
 		var memory *v1.ProcessMemory
 		if memoryInfo != nil {
@@ -64,7 +62,7 @@ func Processes() ([]v1.Process, error) {
 
 		memoryInfoEx, err := p.MemoryInfoEx()
 		if err != nil && !isNotImplementedError(err) {
-			return nil, fmt.Errorf("could not get process memory extra info for pid %d: %v", pid, err)
+			continue
 		}
 		var memoryEx *v1.ProcessMemoryEx
 		if memoryInfoEx != nil {
@@ -81,7 +79,7 @@ func Processes() ([]v1.Process, error) {
 
 		cpuTime, err := p.CPUTimes()
 		if err != nil && !isNotImplementedError(err) {
-			return nil, fmt.Errorf("could not get process cpu for pid %d: %v", pid, err)
+			continue
 		}
 		var cpu *v1.CPUTime
 		if cpuTime != nil {
@@ -101,7 +99,8 @@ func Processes() ([]v1.Process, error) {
 			}
 		}
 
-		processes[i] = v1.Process{
+		processes = append(processes, v1.Process{
+			Pid:      p.Pid,
 			Name:     name,
 			Status:   status,
 			Uids:     uids,
@@ -110,7 +109,7 @@ func Processes() ([]v1.Process, error) {
 			Memory:   memory,
 			MemoryEx: memoryEx,
 			CPUTime:  cpu,
-		}
+		})
 	}
 
 	return processes, nil
