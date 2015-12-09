@@ -35,6 +35,13 @@
 			"path": "/pkg/mount"
 		},
 		{
+			"importpath": "github.com/docker/docker/pkg/units",
+			"repository": "https://github.com/docker/docker",
+			"revision": "a34a1d598c6096ed8b5ce5219e77d68e5cd85462",
+			"branch": "HEAD",
+			"path": "/pkg/units"
+		},
+		{
 			"importpath": "github.com/gizak/termui",
 			"repository": "https://github.com/gizak/termui",
 			"revision": "0cb4aedd6f67dbc6c4b182e51bfde56e1c68adcd",
