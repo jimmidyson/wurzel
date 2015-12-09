@@ -22,7 +22,7 @@ test:
 
 bench:
 	@echo ">> running benchmarks"
-	@$(GO) test -bench=. -benchmem $(pkgs)
+	@$(GO) test -short -race -bench=. -benchmem $(pkgs)
 
 format:
 	@echo ">> formatting code"
