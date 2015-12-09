@@ -16,5 +16,6 @@ dependencies:
 
 test:
   override:
+    - mount
     - cd "$PROJECT_PATH" && make test
     - cd "$PROJECT_PATH" && make bench
