@@ -73,7 +73,7 @@ func (w *watcher) watchCgroup(cgroup string, mounts []cgroups.Mount) error {
 			}
 		}
 	}
-	return fmt.Errorf("cannot find cgroup mount for %s", cgroup)
+	return fmt.Errorf("cannot find cgroup mount for %s. Discovered cgroup mounts: %#v", cgroup, mounts)
 }
 
 func (w *watcher) handleEvents() {
