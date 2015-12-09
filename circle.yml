@@ -16,5 +16,5 @@ dependencies:
 
 test:
   override:
-    - cd "$PROJECT_PATH" && make ci
+    - cd "$PROJECT_PATH" && make test
     - cd "$PROJECT_PATH" && make bench

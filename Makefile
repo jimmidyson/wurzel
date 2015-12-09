@@ -39,11 +39,4 @@ build:
 docker:
 	@docker build -t wurzel:$(shell git rev-parse --short HEAD) .
 
-ci-deps:
-	@go get -u github.com/jstemmer/go-junit-report
-
-ci: ci-deps
-	mkdir -p $$CIRCLE_TEST_REPORTS/junit/
-	@$(GO) test -short -race -v $(pkgs) | go-junit-report > $$CIRCLE_TEST_REPORTS/junit/junit.xml
-
-.PHONY: all format build test vet docker ci ci-deps
+.PHONY: all format build test vet docker
