@@ -6,6 +6,10 @@ import (
 )
 
 func TestWatch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping cgroup watch test")
+	}
+
 	w, err := NewWatcher("cpu")
 	if err != nil {
 		t.Errorf("%v", err)
