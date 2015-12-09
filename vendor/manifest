@@ -8,6 +8,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/Sirupsen/logrus",
+			"repository": "https://github.com/Sirupsen/logrus",
+			"revision": "446d1c146faa8ed3f4218f056fcd165f6bcfda81",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/beorn7/perks/quantile",
 			"repository": "https://github.com/beorn7/perks",
 			"revision": "b965b613227fddccbfffe13eae360ed3fa822f8d",
@@ -180,9 +186,21 @@
 			"path": "/websocket"
 		},
 		{
+			"importpath": "gopkg.in/airbrake/gobrake.v2",
+			"repository": "https://gopkg.in/airbrake/gobrake.v2",
+			"revision": "e5efbe565a5a63d8aafee7efa2f4fdd7f42b7bd3",
+			"branch": "master"
+		},
+		{
 			"importpath": "gopkg.in/fsnotify.v1",
 			"repository": "https://gopkg.in/fsnotify.v1",
 			"revision": "2cdd39bd6129c6a49c74fb07fb9d77ba1271c572",
+			"branch": "master"
+		},
+		{
+			"importpath": "gopkg.in/gemnasium/logrus-airbrake-hook.v2",
+			"repository": "https://gopkg.in/gemnasium/logrus-airbrake-hook.v2",
+			"revision": "31e6fd4bd5a98d8ee7673d24bc54ec73c31810dd",
 			"branch": "master"
 		},
 		{
