@@ -133,7 +133,7 @@
 		{
 			"importpath": "github.com/shirou/gopsutil",
 			"repository": "https://github.com/shirou/gopsutil",
-			"revision": "759e96ebaffb01c3cba0e8b129ef29f56507b323",
+			"revision": "fc932d9090f13a84fb4b3cb8baa124610cab184c",
 			"branch": "master"
 		},
 		{
