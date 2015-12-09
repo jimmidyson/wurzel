@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/docker/libcontainer/cgroups"
+	"github.com/opencontainers/runc/libcontainer/cgroups"
 	"gopkg.in/fsnotify.v1"
 )
 

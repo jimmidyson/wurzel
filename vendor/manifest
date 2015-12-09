@@ -10,8 +10,8 @@
 		{
 			"importpath": "github.com/Sirupsen/logrus",
 			"repository": "https://github.com/Sirupsen/logrus",
-			"revision": "446d1c146faa8ed3f4218f056fcd165f6bcfda81",
-			"branch": "master"
+			"revision": "418b41d23a1bf978c06faea5313ba194650ac088",
+			"branch": "HEAD"
 		},
 		{
 			"importpath": "github.com/beorn7/perks/quantile",
@@ -28,9 +28,16 @@
 			"path": "/md2man"
 		},
 		{
+			"importpath": "github.com/docker/docker/pkg/mount",
+			"repository": "https://github.com/docker/docker",
+			"revision": "a34a1d598c6096ed8b5ce5219e77d68e5cd85462",
+			"branch": "HEAD",
+			"path": "/pkg/mount"
+		},
+		{
 			"importpath": "github.com/gizak/termui",
 			"repository": "https://github.com/gizak/termui",
-			"revision": "47e145b445d82346ece1bc3734bb579439f0128e",
+			"revision": "0cb4aedd6f67dbc6c4b182e51bfde56e1c68adcd",
 			"branch": "master"
 		},
 		{
@@ -61,7 +68,7 @@
 		{
 			"importpath": "github.com/magiconair/properties",
 			"repository": "https://github.com/magiconair/properties",
-			"revision": "6ac0b95f449268951dd5c100682ea687a9866ea1",
+			"revision": "23b847ebbbdaada7234bf4b3da1e50e601fbf63b",
 			"branch": "master"
 		},
 		{
@@ -96,11 +103,17 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/prometheus/client_golang/prometheus",
+			"importpath": "github.com/opencontainers/runc/libcontainer",
+			"repository": "https://github.com/opencontainers/runc",
+			"revision": "97bc9a7faf3dd660d9be90a2880b2e37f3cdbf38",
+			"branch": "HEAD",
+			"path": "/libcontainer"
+		},
+		{
+			"importpath": "github.com/prometheus/client_golang",
 			"repository": "https://github.com/prometheus/client_golang",
 			"revision": "67994f177195311c3ea3d4407ed0175e34a4256f",
-			"branch": "master",
-			"path": "/prometheus"
+			"branch": "master"
 		},
 		{
 			"importpath": "github.com/prometheus/client_model/go",
@@ -112,21 +125,21 @@
 		{
 			"importpath": "github.com/prometheus/common/expfmt",
 			"repository": "https://github.com/prometheus/common",
-			"revision": "ff97411a094ae922768acd11f05f44677a9d543b",
+			"revision": "5cb53e5c863aca6e2b8ec958d16d9a93753ecea6",
 			"branch": "master",
 			"path": "/expfmt"
 		},
 		{
 			"importpath": "github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg",
 			"repository": "https://github.com/prometheus/common",
-			"revision": "ff97411a094ae922768acd11f05f44677a9d543b",
+			"revision": "5cb53e5c863aca6e2b8ec958d16d9a93753ecea6",
 			"branch": "master",
 			"path": "/internal/bitbucket.org/ww/goautoneg"
 		},
 		{
 			"importpath": "github.com/prometheus/common/model",
 			"repository": "https://github.com/prometheus/common",
-			"revision": "ff97411a094ae922768acd11f05f44677a9d543b",
+			"revision": "5cb53e5c863aca6e2b8ec958d16d9a93753ecea6",
 			"branch": "master",
 			"path": "/model"
 		},
@@ -163,7 +176,7 @@
 		{
 			"importpath": "github.com/spf13/cobra",
 			"repository": "https://github.com/spf13/cobra",
-			"revision": "1c44ec8d3f1552cac48999f9306da23c4d8a288b",
+			"revision": "29cddf65b2e18b9c2339f8b659f38fbefe8b98ea",
 			"branch": "master"
 		},
 		{
@@ -191,28 +204,23 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "golang.org/x/net/websocket",
+			"importpath": "golang.org/x/net/context",
 			"repository": "https://go.googlesource.com/net",
-			"revision": "d5cd7348bfebdf7dbb6dbb18fa488525f9024293",
+			"revision": "1796f9b8b7178e3c7587dff118d3bb9d37f9b0b3",
 			"branch": "master",
-			"path": "/websocket"
+			"path": "/context"
 		},
 		{
-			"importpath": "gopkg.in/airbrake/gobrake.v2",
-			"repository": "https://gopkg.in/airbrake/gobrake.v2",
-			"revision": "e5efbe565a5a63d8aafee7efa2f4fdd7f42b7bd3",
-			"branch": "master"
+			"importpath": "golang.org/x/net/websocket",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "1796f9b8b7178e3c7587dff118d3bb9d37f9b0b3",
+			"branch": "master",
+			"path": "/websocket"
 		},
 		{
 			"importpath": "gopkg.in/fsnotify.v1",
 			"repository": "https://gopkg.in/fsnotify.v1",
 			"revision": "2cdd39bd6129c6a49c74fb07fb9d77ba1271c572",
-			"branch": "master"
-		},
-		{
-			"importpath": "gopkg.in/gemnasium/logrus-airbrake-hook.v2",
-			"repository": "https://gopkg.in/gemnasium/logrus-airbrake-hook.v2",
-			"revision": "31e6fd4bd5a98d8ee7673d24bc54ec73c31810dd",
 			"branch": "master"
 		},
 		{
