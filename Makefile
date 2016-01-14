@@ -18,7 +18,7 @@ all: format build vet lint test bench
 
 test:
 	@echo ">> running tests"
-	@$(GO) test -short -race $(pkgs)
+	@$(GO) test -short -race -v $(pkgs) | tee /dev/tty | go-junit-report > $${CIRCLE_TEST_REPORTS:-.}/junit.xml
 
 bench:
 	@echo ">> running benchmarks"
