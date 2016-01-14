@@ -43,4 +43,8 @@ build:
 docker:
 	@docker build -t wurzel:$(shell git rev-parse --short HEAD) .
 
-.PHONY: all format build test vet docker
+deps:
+	@echo ">> installing dependencies"
+	@go get -u github.com/golang/lint/golint
+
+.PHONY: all format build test vet docker deps
