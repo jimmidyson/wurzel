@@ -141,6 +141,33 @@ func ByteToString(orig []byte) string {
 	return string(orig[l:n])
 }
 
+// ReadInts reads contents from single line file and returns them as []int32.
+func ReadInts(filename string) ([]int64, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return []int64{}, err
+	}
+	defer f.Close()
+
+	var ret []int64
+
+	r := bufio.NewReader(f)
+
+	// The int files that this is concerned with should only be one liners.
+	line, err := r.ReadString('\n')
+	if err != nil {
+		return []int64{}, err
+	}
+
+	i, err := strconv.ParseInt(strings.Trim(line, "\n"), 10, 32)
+	if err != nil {
+		return []int64{}, err
+	}
+	ret = append(ret, i)
+
+	return ret, nil
+}
+
 // Parse to int32 without error
 func mustParseInt32(val string) int32 {
 	vv, _ := strconv.ParseInt(val, 10, 32)
@@ -159,7 +186,7 @@ func mustParseFloat64(val string) float64 {
 	return vv
 }
 
-// StringsHas checks the target string slice containes src or not
+// StringsHas checks the target string slice contains src or not
 func StringsHas(target []string, src string) bool {
 	for _, t := range target {
 		if strings.TrimSpace(t) == src {
@@ -209,7 +236,7 @@ func PathExists(filename string) bool {
 	return false
 }
 
-//GetEnv retreives the environment variable key. If it does not exist it returns the default.
+//GetEnv retrieves the environment variable key. If it does not exist it returns the default.
 func GetEnv(key string, dfault string, combineWith ...string) string {
 	value := os.Getenv(key)
 	if value == "" {

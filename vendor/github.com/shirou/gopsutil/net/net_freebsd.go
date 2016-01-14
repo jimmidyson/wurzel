@@ -12,7 +12,7 @@ import (
 )
 
 func NetIOCounters(pernic bool) ([]NetIOCountersStat, error) {
-	out, err := exec.Command("/usr/bin/netstat", "-ibdn").Output()
+	out, err := exec.Command("/usr/bin/netstat", "-ibdnW").Output()
 	if err != nil {
 		return nil, err
 	}
@@ -32,6 +32,9 @@ func NetIOCounters(pernic bool) ([]NetIOCountersStat, error) {
 		}
 		exists = append(exists, values[0])
 
+		if len(values) < 12 {
+			continue
+		}
 		base := 1
 		// sometimes Address is ommitted
 		if len(values) < 13 {

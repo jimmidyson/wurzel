@@ -4,9 +4,11 @@ gopsutil: psutil for golang
 .. image:: https://drone.io/github.com/shirou/gopsutil/status.png
         :target: https://drone.io/github.com/shirou/gopsutil
 
-.. image:: https://coveralls.io/repos/shirou/gopsutil/badge.png?branch=master
+.. image:: https://coveralls.io/repos/shirou/gopsutil/badge.svg?branch=master
         :target: https://coveralls.io/r/shirou/gopsutil?branch=master
 
+.. image:: https://godoc.org/github.com/shirou/gopsutil?status.svg
+        :target: http://godoc.org/github.com/shirou/gopsutil
 
 This is a port of psutil (http://pythonhosted.org/psutil/). The challenge is porting all
 psutil functions on some architectures...
@@ -124,6 +126,11 @@ Several methods have been added which are not present in psutil, but will provid
   - system wide stats on network protocols (i.e IP, TCP, UDP, etc.)
   - sourced from /proc/net/snmp
 
+- iptables nf_conntrack (linux only)
+
+  - system wide stats on netfilter conntrack module
+  - sourced from /proc/sys/net/netfilter/nf_conntrack_count
+
 Some codes are ported from Ohai. many thanks.
 
 
@@ -153,6 +160,7 @@ net_connections      x             x
 net_protocols        x
 net_if_addrs
 net_if_stats
+netfilter_conntrack  x
 ================= ====== ======= ====== =======
 
 Process class
