@@ -46,5 +46,6 @@ docker:
 deps:
 	@echo ">> installing dependencies"
 	@go get -u github.com/golang/lint/golint
+	@go get -u github.com/jstemmer/go-junit-report
 
 .PHONY: all format build test vet docker deps
