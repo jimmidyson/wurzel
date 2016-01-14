@@ -13,8 +13,9 @@
 
 GO   := GO15VENDOREXPERIMENT=1 go
 pkgs  = $(shell $(GO) list ./... | grep -v /vendor/)
+linters := --enable=vet --enable=deadcode --enable=golint --enable=varcheck --enable=structcheck --enable=aligncheck --enable=errcheck --enable=ineffassign --enable=interfacer --enable=goimports --disable=gocyclo --enable=gofmt --disable=gotype --disable=dupl
 
-all: format build vet lint test bench
+all: format build lint test bench
 
 test:
 	@echo ">> running tests"
@@ -28,13 +29,9 @@ format:
 	@echo ">> formatting code"
 	@$(GO) fmt $(pkgs)
 
-vet:
-	@echo ">> vetting code"
-	@$(GO) vet $(pkgs)
-
 lint:
 	@echo ">> linting code"
-	@for pkg in $(pkgs); do golint $${pkg}; done
+	@GOPATH=$(shell pwd)/vendor/:$${GOPATH} gometalinter --vendor --deadline=60s $(linters) ./...
 
 build:
 	@echo ">> building binaries"
@@ -45,7 +42,8 @@ docker:
 
 deps:
 	@echo ">> installing dependencies"
-	@go get -u github.com/golang/lint/golint
-	@go get -u github.com/jstemmer/go-junit-report
+	@go get -u github.com/alecthomas/gometalinter \
+						 github.com/jstemmer/go-junit-report
+	@gometalinter  --install --update --force
 
-.PHONY: all format build test vet docker deps
+.PHONY: all format build test docker deps

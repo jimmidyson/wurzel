@@ -17,4 +17,4 @@ dependencies:
 
 test:
   override:
-    - cd "$PROJECT_PATH" && make test bench vet lint
+    - cd "$PROJECT_PATH" && make test bench lint

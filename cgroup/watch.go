@@ -11,8 +11,6 @@ import (
 	"gopkg.in/fsnotify.v1"
 )
 
-var stopChan chan struct{}
-
 // Watcher interface is implemented by anything watching cgroups.
 type Watcher interface {
 	Start() error
@@ -50,7 +48,10 @@ func (w *watcher) Start() error {
 	for _, cgroup := range w.cgroups {
 		err := w.watchCgroup(cgroup, mounts)
 		if err != nil {
-			w.Stop()
+			stopErr := w.Stop()
+			if stopErr != nil {
+				log.WithFields(log.Fields{"error": stopErr}).Debug("Cannot stop watch")
+			}
 			return err
 		}
 	}

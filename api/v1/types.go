@@ -11,16 +11,16 @@ type Node struct {
 // NodeCPUInfo holds info about the node's CPUs.
 type NodeCPUInfo struct {
 	CPU        int32    `json:"cpu"`
+	CacheSize  int32    `json:"cache_size"`
+	Cores      int32    `json:"cores"`
+	Stepping   int32    `json:"stepping"`
 	VendorID   string   `json:"vendor_id"`
 	Family     string   `json:"family"`
 	Model      string   `json:"model"`
-	Stepping   int32    `json:"stepping"`
 	PhysicalID string   `json:"physical_id"`
 	CoreID     string   `json:"core_id"`
-	Cores      int32    `json:"cores"`
 	ModelName  string   `json:"model_name"`
 	Mhz        float64  `json:"mhz"`
-	CacheSize  int32    `json:"cache_size"`
 	Flags      []string `json:"flags"`
 }
 
@@ -68,11 +68,11 @@ type NodeSwap struct {
 // Process holds info related to a single process.
 type Process struct {
 	Pid      int32            `json:"pid"`
+	Threads  int32            `json:"threads"`
 	Name     string           `json:"name"`
 	Status   string           `json:"status"`
 	Uids     []int32          `json:"uids"`
 	Gids     []int32          `json:"gids"`
-	Threads  int32            `json:"threads"`
 	Memory   *ProcessMemory   `json:"memory"`
 	MemoryEx *ProcessMemoryEx `json:"memoryex,omitempty"`
 	CPUTime  *CPUTime         `json:"cputime"`
