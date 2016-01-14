@@ -14,7 +14,7 @@
 GO   := GO15VENDOREXPERIMENT=1 go
 pkgs  = $(shell $(GO) list ./... | grep -v /vendor/)
 
-all: format build test
+all: format build vet test
 
 test:
 	@echo ">> running tests"
