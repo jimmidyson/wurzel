@@ -31,7 +31,7 @@ format:
 
 lint:
 	@echo ">> linting code"
-	@GOPATH=$(shell pwd)/vendor/:$${GOPATH} gometalinter --vendor --deadline=60s $(linters) ./...
+	@export TMP=$(shell mktemp -d) && cp -r vendor $${TMP}/src && GOPATH=$${TMP}:$${GOPATH} gometalinter --vendor --deadline=60s $(linters) ./...
 
 build:
 	@echo ">> building binaries"
@@ -44,6 +44,6 @@ deps:
 	@echo ">> installing dependencies"
 	@go get -u github.com/alecthomas/gometalinter \
 						 github.com/jstemmer/go-junit-report
-	@gometalinter  --install --update --force
+	@gometalinter --install --update --force
 
 .PHONY: all format build test docker deps
