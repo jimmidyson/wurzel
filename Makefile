@@ -14,7 +14,7 @@
 GO   := GO15VENDOREXPERIMENT=1 go
 pkgs  = $(shell $(GO) list ./... | grep -v /vendor/)
 
-all: format build vet test
+all: format build vet lint test bench
 
 test:
 	@echo ">> running tests"
@@ -22,7 +22,7 @@ test:
 
 bench:
 	@echo ">> running benchmarks"
-	@$(GO) test -short -race -bench=. -benchmem $(pkgs)
+	@for pkg in $(pkgs); do echo ">>> $$pkg"; $(GO) test -run=nothingplease -short -race -bench=. -benchmem $${pkg}; done
 
 format:
 	@echo ">> formatting code"
@@ -31,6 +31,10 @@ format:
 vet:
 	@echo ">> vetting code"
 	@$(GO) vet $(pkgs)
+
+lint:
+	@echo ">> linting code"
+	@for pkg in $(pkgs); do golint $${pkg}; done
 
 build:
 	@echo ">> building binaries"
