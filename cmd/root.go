@@ -25,6 +25,7 @@ import (
 )
 
 var (
+	// RootCmd is the root command for the whole program.
 	RootCmd = &cobra.Command{
 		Use:   "wurzel",
 		Short: "Combining & harvesting metrics from various sources",
@@ -36,7 +37,7 @@ var (
 			var formatter log.Formatter = &prefixed.TextFormatter{
 				TimestampFormat: time.RFC3339Nano,
 			}
-			if logJson {
+			if logJSON {
 				formatter = &logstash.LogstashFormatter{Type: "wurzel"}
 			}
 			log.SetFormatter(formatter)
@@ -45,7 +46,7 @@ var (
 				if err != nil {
 					log.Fatal(err)
 				}
-				if !logJson {
+				if !logJSON {
 					log.SetFormatter(&prefixed.TextFormatter{
 						TimestampFormat: time.RFC3339Nano,
 						DisableColors:   true,
@@ -57,12 +58,12 @@ var (
 	}
 	verbose bool
 	logFile string
-	logJson bool
+	logJSON bool
 )
 
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	RootCmd.PersistentFlags().BoolVar(&logJson, "log-json", false, "log in JSON format")
+	RootCmd.PersistentFlags().BoolVar(&logJSON, "log-json", false, "log in JSON format")
 }
 
 func main() {

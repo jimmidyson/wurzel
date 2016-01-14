@@ -5,12 +5,14 @@ import (
 	"github.com/shirou/gopsutil/process"
 )
 
-func ProcessIDs() ([]int32, error) {
+// IDs returns all the current running process IDs.
+func IDs() ([]int32, error) {
 	return process.Pids()
 }
 
-func Processes() ([]v1.Process, error) {
-	pids, err := ProcessIDs()
+// List returns information about all the processes running on the node.
+func List() ([]v1.Process, error) {
+	pids, err := IDs()
 	if err != nil {
 		return nil, err
 	}

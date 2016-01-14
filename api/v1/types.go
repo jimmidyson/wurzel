@@ -1,5 +1,6 @@
 package v1
 
+// Node holds the overall node information.
 type Node struct {
 	CPUInfo []NodeCPUInfo `json:"cpuinfo"`
 	CPUTime []CPUTime     `json:"cputime"`
@@ -7,6 +8,7 @@ type Node struct {
 	Swap    *NodeSwap     `json:"memory"`
 }
 
+// NodeCPUInfo holds info about the node's CPUs.
 type NodeCPUInfo struct {
 	CPU        int32    `json:"cpu"`
 	VendorID   string   `json:"vendor_id"`
@@ -22,6 +24,7 @@ type NodeCPUInfo struct {
 	Flags      []string `json:"flags"`
 }
 
+// CPUTime holds CPU time information for either a node or a cgroup.
 type CPUTime struct {
 	CPU       string  `json:"cpu"`
 	User      float64 `json:"user"`
@@ -37,6 +40,7 @@ type CPUTime struct {
 	Stolen    float64 `json:"stolen"`
 }
 
+// NodeMemory holds info on the current state of the node's memory.
 type NodeMemory struct {
 	Total       uint64  `json:"total"`
 	Available   uint64  `json:"available"`
@@ -51,6 +55,7 @@ type NodeMemory struct {
 	Shared      uint64  `json:"shared"`
 }
 
+// NodeSwap holds info on the current state of the node's swap.
 type NodeSwap struct {
 	Total       uint64  `json:"total"`
 	Used        uint64  `json:"used"`
@@ -60,6 +65,7 @@ type NodeSwap struct {
 	Sout        uint64  `json:"sout"`
 }
 
+// Process holds info related to a single process.
 type Process struct {
 	Pid      int32            `json:"pid"`
 	Name     string           `json:"name"`
@@ -73,12 +79,14 @@ type Process struct {
 	Created  int64            `json:"created"`
 }
 
+// ProcessMemory holds memory info related to a single process.
 type ProcessMemory struct {
 	RSS  uint64 `json:"rss"`
 	VMS  uint64 `json:"vms"`
 	Swap uint64 `json:"swap"`
 }
 
+// ProcessMemoryEx holds extra memory info related to a single process, if available.
 type ProcessMemoryEx struct {
 	RSS    uint64 `json:"rss"`
 	VMS    uint64 `json:"vms"`

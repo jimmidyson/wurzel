@@ -5,6 +5,7 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
+// Memory returns info on the current state of the node's memory.
 func Memory() (*v1.NodeMemory, error) {
 	mi, err := mem.VirtualMemory()
 	if err != nil {
@@ -26,6 +27,7 @@ func Memory() (*v1.NodeMemory, error) {
 	}, nil
 }
 
+// Swap returns info on the current state of the node's swap.
 func Swap() (*v1.NodeSwap, error) {
 	mi, err := mem.SwapMemory()
 	if err != nil {

@@ -2,8 +2,8 @@ package process
 
 import "testing"
 
-func TestProcessIDs(t *testing.T) {
-	v, err := ProcessIDs()
+func TestIDs(t *testing.T) {
+	v, err := IDs()
 	if err != nil {
 		t.Errorf("error %v", err)
 	}
@@ -12,17 +12,17 @@ func TestProcessIDs(t *testing.T) {
 	}
 }
 
-func BenchmarkProcessIDs(b *testing.B) {
+func BenchmarkIDs(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_, err := ProcessIDs()
+		_, err := IDs()
 		if err != nil {
 			b.Errorf("error %v", err)
 		}
 	}
 }
 
-func TestProcesses(t *testing.T) {
-	v, err := Processes()
+func TestList(t *testing.T) {
+	v, err := List()
 	if err != nil {
 		t.Errorf("error %v", err)
 	}
@@ -39,9 +39,9 @@ func TestProcesses(t *testing.T) {
 	}
 }
 
-func BenchmarkProcesses(b *testing.B) {
+func BenchmarkList(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_, err := Processes()
+		_, err := List()
 		if err != nil {
 			b.Errorf("error %v", err)
 		}

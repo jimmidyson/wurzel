@@ -3,6 +3,7 @@ package node
 import "github.com/jimmidyson/wurzel/api/v1"
 import "github.com/shirou/gopsutil/cpu"
 
+// CPUInfo returns informaiton about the CPUs on the node.
 func CPUInfo() ([]v1.NodeCPUInfo, error) {
 	cpus, err := cpu.CPUInfo()
 	if err != nil {
@@ -31,6 +32,7 @@ func CPUInfo() ([]v1.NodeCPUInfo, error) {
 	return ret, nil
 }
 
+// CPUTime returns the times each CPU of the node has been in use.
 func CPUTime() ([]v1.CPUTime, error) {
 	times, err := cpu.CPUTimes(true)
 	if err != nil {

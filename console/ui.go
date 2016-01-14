@@ -8,6 +8,7 @@ import (
 	"github.com/jimmidyson/wurzel/node"
 )
 
+// Run starts the console UI.
 func Run() {
 	w, err := cgroup.NewWatcher("memory", "cpu", "cpuacct", "blkio")
 	if err != nil {

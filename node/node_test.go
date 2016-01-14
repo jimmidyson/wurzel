@@ -2,8 +2,8 @@ package node
 
 import "testing"
 
-func TestNode(t *testing.T) {
-	v, err := Node()
+func TestInfo(t *testing.T) {
+	v, err := Info()
 	if err != nil {
 		t.Errorf("error %v", err)
 	}
@@ -12,9 +12,9 @@ func TestNode(t *testing.T) {
 	}
 }
 
-func BenchmarkNode(b *testing.B) {
+func BenchmarkInfo(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_, err := Node()
+		_, err := Info()
 		if err != nil {
 			b.Errorf("error %v", err)
 		}

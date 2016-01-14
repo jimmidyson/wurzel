@@ -4,7 +4,8 @@ import (
 	"github.com/jimmidyson/wurzel/api/v1"
 )
 
-func Node() (*v1.Node, error) {
+// Info returns info about the node's CPU, memory, etc.
+func Info() (*v1.Node, error) {
 	cpu, err := CPUInfo()
 	if err != nil {
 		return nil, err

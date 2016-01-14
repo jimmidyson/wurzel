@@ -13,11 +13,13 @@ import (
 
 var stopChan chan struct{}
 
+// Watcher interface is implemented by anything watching cgroups.
 type Watcher interface {
 	Start() error
 	Stop() error
 }
 
+// NewWatcher is a factory method for a new watcher for a number of cgroups.
 func NewWatcher(cgroup ...string) (Watcher, error) {
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
