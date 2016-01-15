@@ -4,22 +4,12 @@ import (
 	log "github.com/Sirupsen/logrus"
 	ui "github.com/gizak/termui"
 
-	"github.com/jimmidyson/wurzel/cgroup"
 	"github.com/jimmidyson/wurzel/node"
 )
 
 // Run starts the console UI.
 func Run() {
-	w, err := cgroup.NewWatcher("memory", "cpu", "cpuacct", "blkio")
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = w.Start()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = ui.Init()
+	err := ui.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,9 +35,6 @@ func Run() {
 
 	// build layout
 	ui.Body.AddRows(
-		ui.NewRow(
-			ui.NewCol(6, 0, header),
-		),
 		ui.NewRow(
 			ui.NewCol(6, 0, memGauge),
 			ui.NewCol(6, 0, swapGauge),
