@@ -6,7 +6,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
-	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 
 	"github.com/jimmidyson/wurzel/console"
 )
@@ -23,7 +22,7 @@ var (
 					log.Fatal(err)
 				}
 				if !logJSON {
-					log.SetFormatter(&prefixed.TextFormatter{
+					log.SetFormatter(&log.TextFormatter{
 						TimestampFormat: time.RFC3339Nano,
 						DisableColors:   true,
 					})
