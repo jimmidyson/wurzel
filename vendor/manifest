@@ -205,12 +205,6 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/x-cray/logrus-prefixed-formatter",
-			"repository": "https://github.com/x-cray/logrus-prefixed-formatter",
-			"revision": "19bfe61502ba35a3235b4970c10b9366a0aa9b61",
-			"branch": "master"
-		},
-		{
 			"importpath": "golang.org/x/net/context",
 			"repository": "https://go.googlesource.com/net",
 			"revision": "1796f9b8b7178e3c7587dff118d3bb9d37f9b0b3",
