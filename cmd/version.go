@@ -7,8 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jimmidyson/wurzel/version"
 	"github.com/spf13/cobra"
+
+	"github.com/jimmidyson/wurzel/version"
 )
 
 var versionInfoTmpl = `
