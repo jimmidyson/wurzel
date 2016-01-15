@@ -15,13 +15,11 @@
 package main
 
 import (
-	"os"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/Sirupsen/logrus/formatters/logstash"
 	"github.com/spf13/cobra"
-	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 var (
@@ -34,36 +32,23 @@ var (
 			if verbose {
 				log.SetLevel(log.DebugLevel)
 			}
-			var formatter log.Formatter = &prefixed.TextFormatter{
-				TimestampFormat: time.RFC3339Nano,
-			}
 			if logJSON {
-				formatter = &logstash.LogstashFormatter{Type: "wurzel"}
-			}
-			log.SetFormatter(formatter)
-			if logFile != "" {
-				f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-				if err != nil {
-					log.Fatal(err)
-				}
-				if !logJSON {
-					log.SetFormatter(&prefixed.TextFormatter{
-						TimestampFormat: time.RFC3339Nano,
-						DisableColors:   true,
-					})
-				}
-				log.SetOutput(f)
+				log.SetFormatter(&logstash.LogstashFormatter{
+					Type:            "wurzel",
+					TimestampFormat: time.RFC3339Nano,
+				})
 			}
 		},
 	}
 	verbose bool
-	logFile string
 	logJSON bool
+	cgroups []string
 )
 
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	RootCmd.PersistentFlags().BoolVar(&logJSON, "log-json", false, "log in JSON format")
+	RootCmd.PersistentFlags().StringSliceVar(&cgroups, "cgroup", []string{"memory", "cpu", "cpuacct", "blkio"}, "enabled cgroups")
 }
 
 func main() {
