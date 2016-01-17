@@ -39,11 +39,8 @@ var (
 )
 
 func init() {
-	consoleCmd.Flags().String("log-file", "wurzel.log", "file to log to")
-	err := viper.BindPFlag("log-file", consoleCmd.Flags().Lookup("log-file"))
-	if err != nil {
-		log.WithField("error", err).Fatal("Error configuring config options")
-	}
+	addStringFlag(consoleCmd.Flags(), "log-file", "wurzel.log", "file to log to")
+
 	RootCmd.AddCommand(consoleCmd)
 
 }

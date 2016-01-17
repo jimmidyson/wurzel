@@ -65,47 +65,13 @@ func init() {
 	viper.SetEnvPrefix("wurzel")
 	viper.AutomaticEnv()
 
-	RootCmd.PersistentFlags().String("listen-address", ":8080", "the address to listen on for API requests")
-	err := viper.BindPFlag("listen-address", RootCmd.PersistentFlags().Lookup("listen-address"))
-	if err != nil {
-		log.WithField("error", err).Fatal("Error configuring config options")
-	}
-	viper.SetDefault("listen-address", ":8080")
+	addStringFlag(RootCmd.PersistentFlags(), "listen-address", ":8080", "the address to listen on for API requests")
+	addStringFlag(RootCmd.PersistentFlags(), "cgroups", "blkio,cpu,cpuacct,cpuset,devices,freezer,hugetlb,memory,net_cls,net_prio,perf_event", "enabled cgroups (comma-separated)")
+	addStringFlag(RootCmd.PersistentFlags(), "debug-address", "localhost:6060", "the address to listen on for debug/profile requests")
 
-	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
-	err = viper.BindPFlag("verbose", RootCmd.PersistentFlags().Lookup("verbose"))
-	if err != nil {
-		log.WithField("error", err).Fatal("Error configuring config options")
-	}
-	viper.SetDefault("verbose", false)
-
-	RootCmd.PersistentFlags().Bool("log-json", false, "log in JSON format")
-	err = viper.BindPFlag("log-json", RootCmd.PersistentFlags().Lookup("log-json"))
-	if err != nil {
-		log.WithField("error", err).Fatal("Error configuring config options")
-	}
-	viper.SetDefault("log-json", false)
-
-	RootCmd.PersistentFlags().String("cgroups", "blkio,cpu,cpuacct,cpuset,devices,freezer,hugetlb,memory,net_cls,net_prio,perf_event", "enabled cgroups (comma-separated)")
-	err = viper.BindPFlag("cgroups", RootCmd.PersistentFlags().Lookup("cgroups"))
-	if err != nil {
-		log.WithField("error", err).Fatal("Error configuring config options")
-	}
-	viper.SetDefault("cgroups", "blkio,cpu,cpuacct,cpuset,devices,freezer,hugetlb,memory,net_cls,net_prio,perf_event")
-
-	RootCmd.PersistentFlags().Bool("debug", false, "enable debug/profile endpoints")
-	err = viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
-	if err != nil {
-		log.WithField("error", err).Fatal("Error configuring config options")
-	}
-	viper.SetDefault("debug", false)
-
-	RootCmd.PersistentFlags().String("debug-address", "localhost:6060", "the address to listen on for debug/profile requests")
-	err = viper.BindPFlag("debug-address", RootCmd.PersistentFlags().Lookup("debug-address"))
-	if err != nil {
-		log.WithField("error", err).Fatal("Error configuring config options")
-	}
-	viper.SetDefault("debug-address", "localhost:6060")
+	addBoolPFlag(RootCmd.PersistentFlags(), "verbose", "v", false, "verbose output")
+	addBoolFlag(RootCmd.PersistentFlags(), "log-json", false, "log in JSON format")
+	addBoolPFlag(RootCmd.PersistentFlags(), "debug", "d", false, "enable debug/profile endpoints")
 }
 
 func main() {
