@@ -72,26 +72,9 @@ func (w *watcher) watchCgroup(cg string, mounts []cgroups.Mount) error {
 	for _, mount := range mounts {
 		for _, subsystem := range mount.Subsystems {
 			if subsystem == cg {
-				w.cgroupMu.Lock()
-
-				// Sometimes cgroups share mount points, e.g. cpu,cpuacct.
-				var subcgroups map[string]*cgroup
-				for _, existingCg := range w.cgroups {
-					if existingCg.path == mount.Mountpoint {
-						subcgroups = existingCg.subcgroups
-					}
+				if !w.initializeCgroup(cg, mount) {
+					return nil
 				}
-				if subcgroups == nil {
-					subcgroups = make(map[string]*cgroup)
-				}
-
-				w.cgroups[subsystem] = &cgroup{
-					name:       cg,
-					path:       mount.Mountpoint,
-					subcgroups: subcgroups,
-				}
-
-				w.cgroupMu.Unlock()
 
 				err := filepath.Walk(mount.Mountpoint, func(path string, info os.FileInfo, err error) error {
 					if info.IsDir() {
@@ -107,6 +90,33 @@ func (w *watcher) watchCgroup(cg string, mounts []cgroups.Mount) error {
 		}
 	}
 	return fmt.Errorf("cannot find cgroup mount for %s. Discovered cgroup mounts: %#v", cg, mounts)
+}
+
+func (w *watcher) initializeCgroup(cg string, mount cgroups.Mount) bool {
+	w.cgroupMu.Lock()
+	defer w.cgroupMu.Unlock()
+
+	newCgroup := true
+	// Sometimes cgroups share mount points, e.g. cpu,cpuacct.
+	var subcgroups map[string]*cgroup
+	for _, existingCg := range w.cgroups {
+		if existingCg.path == mount.Mountpoint {
+			subcgroups = existingCg.subcgroups
+			newCgroup = false
+		}
+	}
+
+	if subcgroups == nil {
+		subcgroups = make(map[string]*cgroup)
+	}
+
+	w.cgroups[cg] = &cgroup{
+		name:       cg,
+		path:       mount.Mountpoint,
+		subcgroups: subcgroups,
+	}
+
+	return newCgroup
 }
 
 func (w *watcher) findCgroupMountpoint(path string) (string, string) {

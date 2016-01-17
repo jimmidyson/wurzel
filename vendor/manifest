@@ -55,6 +55,12 @@
 			"path": "/proto"
 		},
 		{
+			"importpath": "github.com/hashicorp/hcl",
+			"repository": "https://github.com/hashicorp/hcl",
+			"revision": "197e8d3cf42199cfd53cd775deb37f3637234635",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/inconshreveable/mousetrap",
 			"repository": "https://github.com/inconshreveable/mousetrap",
 			"revision": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75",
@@ -201,7 +207,7 @@
 		{
 			"importpath": "github.com/spf13/viper",
 			"repository": "https://github.com/spf13/viper",
-			"revision": "e37b56e207dda4d79b9defe0548e960658ee8b6b",
+			"revision": "a212099cbe6fbe8d07476bfda8d2d39b6ff8f325",
 			"branch": "master"
 		},
 		{

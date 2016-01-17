@@ -73,10 +73,10 @@ type Process struct {
 	Status   string           `json:"status"`
 	Uids     []int32          `json:"uids"`
 	Gids     []int32          `json:"gids"`
+	Created  int64            `json:"created"`
 	Memory   *ProcessMemory   `json:"memory"`
 	MemoryEx *ProcessMemoryEx `json:"memoryex,omitempty"`
 	CPUTime  *CPUTime         `json:"cputime"`
-	Created  int64            `json:"created"`
 }
 
 // ProcessMemory holds memory info related to a single process.

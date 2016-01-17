@@ -6,6 +6,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/jimmidyson/wurzel/console"
 )
@@ -21,7 +22,7 @@ var (
 				if err != nil {
 					log.Fatal(err)
 				}
-				if !logJSON {
+				if !viper.GetBool("log-json") {
 					log.SetFormatter(&log.TextFormatter{
 						TimestampFormat: time.RFC3339Nano,
 						DisableColors:   true,
@@ -38,6 +39,11 @@ var (
 )
 
 func init() {
-	consoleCmd.Flags().StringVar(&logFile, "log-file", "wurzel.log", "file to log to")
+	consoleCmd.Flags().String("log-file", "wurzel.log", "file to log to")
+	err := viper.BindPFlag("log-file", consoleCmd.Flags().Lookup("log-file"))
+	if err != nil {
+		log.WithField("error", err).Fatal("Error configuring config options")
+	}
 	RootCmd.AddCommand(consoleCmd)
+
 }
