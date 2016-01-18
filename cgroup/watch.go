@@ -9,7 +9,26 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
+	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/fsnotify.v1"
+
+	"github.com/jimmidyson/wurzel/metrics"
+)
+
+const (
+	// MetricsSubsystem is the metrics subsystem for cgroups.
+	MetricsSubsystem = "cgroups"
+)
+
+var (
+	inotifyCount = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: metrics.Namespace,
+			Subsystem: MetricsSubsystem,
+			Name:      "fsnotify_count_current",
+			Help:      "The current number of fs notifies that are running.",
+		},
+	)
 )
 
 // Watcher interface is implemented by anything watching cgroups.
@@ -19,26 +38,83 @@ type Watcher interface {
 }
 
 // NewWatcher is a factory method for a new watcher for a number of cgroups.
-func NewWatcher(cgs ...string) (Watcher, error) {
+func NewWatcher(subsystems ...string) (Watcher, error) {
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
-	return &watcher{
-		watchedCgroups:  cgs,
-		fsnotifyWatcher: fsWatcher,
-		done:            make(chan struct{}),
-		cgroups:         make(map[string]*cgroup, len(cgs)),
-	}, nil
+
+	w := &watcher{
+		watchedSubsystems: subsystems,
+		fsnotifyWatcher:   fsWatcher,
+		done:              make(chan struct{}),
+		cgroups:           make(map[string]*cgroup, len(subsystems)),
+	}
+
+	mounts, err := cgroups.GetCgroupMounts()
+	if err != nil {
+		return nil, err
+	}
+
+	allSubsystems := map[string]struct{}{
+		"blkio":      {},
+		"cpu":        {},
+		"cpuacct":    {},
+		"cpuset":     {},
+		"devices":    {},
+		"freezer":    {},
+		"hugetlb":    {},
+		"memory":     {},
+		"net_cls":    {},
+		"net_prio":   {},
+		"perf_event": {},
+	}
+
+	for _, subsystem := range w.watchedSubsystems {
+		err := w.watchSubsystem(subsystem, mounts)
+		if err != nil {
+			stopErr := w.Stop()
+			if stopErr != nil {
+				log.WithFields(log.Fields{"error": stopErr}).Debug("Cannot stop watch")
+			}
+			return nil, err
+		}
+		registerEnabledSubsystemMetrics(subsystem, true)
+		delete(allSubsystems, subsystem)
+	}
+
+	for subsystem := range allSubsystems {
+		registerEnabledSubsystemMetrics(subsystem, false)
+	}
+
+	return w, nil
+}
+
+func registerEnabledSubsystemMetrics(subsystem string, enabled bool) {
+	value := 0.0
+	if enabled {
+		value = 1.0
+	}
+	m := prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace:   metrics.Namespace,
+			Subsystem:   MetricsSubsystem,
+			Name:        "subsystem_enabled",
+			Help:        "A metric with a constant '0' for disabled or '1' for enabled labeled by subsystem.",
+			ConstLabels: prometheus.Labels{"subsystem": subsystem},
+		},
+	)
+	m.Set(value)
+	prometheus.MustRegister(m)
 }
 
 type watcher struct {
-	cgroups         map[string]*cgroup
-	watchedCgroups  []string
-	fsnotifyWatcher *fsnotify.Watcher
-	done            chan struct{}
-	wg              sync.WaitGroup
-	cgroupMu        sync.RWMutex
+	cgroups           map[string]*cgroup
+	watchedSubsystems []string
+	fsnotifyWatcher   *fsnotify.Watcher
+	done              chan struct{}
+	wg                sync.WaitGroup
+	cgroupMu          sync.RWMutex
 }
 
 type cgroup struct {
@@ -48,61 +124,51 @@ type cgroup struct {
 }
 
 func (w *watcher) Start() error {
-	mounts, err := cgroups.GetCgroupMounts()
-	if err != nil {
-		return err
-	}
-
 	go w.handleEvents()
 
-	for _, cg := range w.watchedCgroups {
-		err := w.watchCgroup(cg, mounts)
-		if err != nil {
-			stopErr := w.Stop()
-			if stopErr != nil {
-				log.WithFields(log.Fields{"error": stopErr}).Debug("Cannot stop watch")
+	watchedDirs := map[string]struct{}{}
+	for _, cg := range w.cgroups {
+		err := filepath.Walk(cg.path, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
+				if _, ok := watchedDirs[path]; !ok {
+					err := w.watch(path)
+					if err != nil {
+						return err
+					}
+					watchedDirs[path] = struct{}{}
+				}
 			}
+			return nil
+		})
+		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func (w *watcher) watchCgroup(cg string, mounts []cgroups.Mount) error {
+func (w *watcher) watchSubsystem(subsystem string, mounts []cgroups.Mount) error {
 	for _, mount := range mounts {
-		for _, subsystem := range mount.Subsystems {
-			if subsystem == cg {
-				if !w.initializeCgroup(cg, mount) {
-					return nil
-				}
-
-				err := filepath.Walk(mount.Mountpoint, func(path string, info os.FileInfo, err error) error {
-					if info.IsDir() {
-						err := w.watch(path)
-						if err != nil {
-							return err
-						}
-					}
-					return nil
-				})
-				return err
+		for _, mountedSsubsystem := range mount.Subsystems {
+			if mountedSsubsystem == subsystem {
+				w.initializeSubsystem(subsystem, mount)
+				return nil
 			}
 		}
 	}
-	return fmt.Errorf("cannot find cgroup mount for %s. Discovered cgroup mounts: %#v", cg, mounts)
+	return fmt.Errorf("cannot find subsystem mount for %s. Discovered subsystem mounts: %#v", subsystem, mounts)
 }
 
-func (w *watcher) initializeCgroup(cg string, mount cgroups.Mount) bool {
+func (w *watcher) initializeSubsystem(subsystem string, mount cgroups.Mount) {
 	w.cgroupMu.Lock()
 	defer w.cgroupMu.Unlock()
 
-	newCgroup := true
 	// Sometimes cgroups share mount points, e.g. cpu,cpuacct.
 	var subcgroups map[string]*cgroup
 	for _, existingCg := range w.cgroups {
 		if existingCg.path == mount.Mountpoint {
 			subcgroups = existingCg.subcgroups
-			newCgroup = false
 		}
 	}
 
@@ -110,13 +176,13 @@ func (w *watcher) initializeCgroup(cg string, mount cgroups.Mount) bool {
 		subcgroups = make(map[string]*cgroup)
 	}
 
-	w.cgroups[cg] = &cgroup{
-		name:       cg,
+	w.cgroups[subsystem] = &cgroup{
+		name:       subsystem,
 		path:       mount.Mountpoint,
 		subcgroups: subcgroups,
 	}
 
-	return newCgroup
+	log.WithFields(log.Fields{"subsystem": subsystem, "path": mount.Mountpoint}).Info("Initialized subsystem")
 }
 
 func (w *watcher) findCgroupMountpoint(path string) (string, string) {
@@ -173,6 +239,7 @@ func (w *watcher) watch(path string) error {
 		return err
 	}
 	log.WithFields(log.Fields{"target": absPath}).Debug("Started watching cgroup dir")
+	inotifyCount.Inc()
 
 	return nil
 }
@@ -192,6 +259,8 @@ func (w *watcher) unwatch(path string) error {
 	if err != nil {
 		return err
 	}
+
+	inotifyCount.Dec()
 
 	subsystem, cgroupMountPoint := w.findCgroupMountpoint(absPath)
 	if cgroupMountPoint == "" {

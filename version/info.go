@@ -1,6 +1,10 @@
 package version
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/jimmidyson/wurzel/metrics"
+)
 
 // Build information. Populated at build-time.
 var (
@@ -23,14 +27,15 @@ var Map = map[string]string{
 }
 
 func init() {
-	buildInfo := prometheus.NewGaugeVec(
+	buildInfo := prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "wurzel_build_info",
-			Help: "A metric with a constant '1' value labeled by version, revision, and branch from which Wurzel was built.",
+			Namespace:   metrics.Namespace,
+			Subsystem:   "build",
+			Name:        "info",
+			Help:        "A metric with a constant '1' value labeled by version, revision, and branch from which Wurzel was built.",
+			ConstLabels: prometheus.Labels{"version": Version, "revision": Revision, "branch": Branch},
 		},
-		[]string{"version", "revision", "branch"},
 	)
-	buildInfo.WithLabelValues(Version, Revision, Branch).Set(1)
-
+	buildInfo.Set(1)
 	prometheus.MustRegister(buildInfo)
 }
