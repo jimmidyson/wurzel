@@ -21,15 +21,20 @@ const (
 )
 
 var (
-	inotifyCount = prometheus.NewGauge(
+	inotifyCount = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metrics.Namespace,
 			Subsystem: MetricsSubsystem,
 			Name:      "fsnotify_count_current",
-			Help:      "The current number of fs notifies that are running.",
+			Help:      "The current number of fs notifies labeled by subsystem.",
 		},
+		[]string{"subsystem"},
 	)
 )
+
+func init() {
+	prometheus.MustRegister(inotifyCount)
+}
 
 // Watcher interface is implemented by anything watching cgroups.
 type Watcher interface {
@@ -79,18 +84,18 @@ func NewWatcher(subsystems ...string) (Watcher, error) {
 			}
 			return nil, err
 		}
-		registerEnabledSubsystemMetrics(subsystem, true)
+		registerSubsystemMetrics(subsystem, true)
 		delete(allSubsystems, subsystem)
 	}
 
 	for subsystem := range allSubsystems {
-		registerEnabledSubsystemMetrics(subsystem, false)
+		registerSubsystemMetrics(subsystem, false)
 	}
 
 	return w, nil
 }
 
-func registerEnabledSubsystemMetrics(subsystem string, enabled bool) {
+func registerSubsystemMetrics(subsystem string, enabled bool) {
 	value := 0.0
 	if enabled {
 		value = 1.0
@@ -239,7 +244,7 @@ func (w *watcher) watch(path string) error {
 		return err
 	}
 	log.WithFields(log.Fields{"target": absPath}).Debug("Started watching cgroup dir")
-	inotifyCount.Inc()
+	inotifyCount.WithLabelValues(subsystem).Inc()
 
 	return nil
 }
@@ -254,18 +259,18 @@ func (w *watcher) unwatch(path string) error {
 		return err
 	}
 
+	subsystem, cgroupMountPoint := w.findCgroupMountpoint(absPath)
+	if cgroupMountPoint == "" {
+		return fmt.Errorf("Cannot find cgroup mount point for %s", absPath)
+	}
+
 	log.WithFields(log.Fields{"target": absPath}).Debug("Stopping watching cgroup dir")
 	err = w.fsnotifyWatcher.Remove(absPath)
 	if err != nil {
 		return err
 	}
 
-	inotifyCount.Dec()
-
-	subsystem, cgroupMountPoint := w.findCgroupMountpoint(absPath)
-	if cgroupMountPoint == "" {
-		return fmt.Errorf("Cannot find cgroup mount point for %s", absPath)
-	}
+	inotifyCount.WithLabelValues(subsystem).Dec()
 
 	rel, err := filepath.Rel(cgroupMountPoint, absPath)
 	if err != nil {
