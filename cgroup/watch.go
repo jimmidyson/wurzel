@@ -6,9 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/opencontainers/runc/libcontainer/cgroups"
+	"github.com/opencontainers/runc/libcontainer/cgroups/fs"
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/fsnotify.v1"
 
@@ -21,6 +23,8 @@ const (
 )
 
 var (
+	allSubsystems = []string{"blkio", "cpu", "cpuacct", "cpuset", "devices", "freezer", "hugetlb", "memory", "net_cls", "net_prio", "perf_event"}
+
 	inotifyCount = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metrics.Namespace,
@@ -30,10 +34,31 @@ var (
 		},
 		[]string{"subsystem"},
 	)
+
+	statsCollectionSummary = prometheus.NewSummary(
+		prometheus.SummaryOpts{
+			Namespace: metrics.Namespace,
+			Subsystem: MetricsSubsystem,
+			Name:      "stats_collection_duration_microseconds",
+			Help:      "The time taken to collect cgroup stats.",
+		},
+	)
+
+	subsystemStatsCollectionSummary = prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Namespace: metrics.Namespace,
+			Subsystem: MetricsSubsystem,
+			Name:      "subsystem_stats_collection_duration_microseconds",
+			Help:      "The time taken to collect cgroup stats, labeled by subsystem.",
+		},
+		[]string{"subsystem"},
+	)
 )
 
 func init() {
 	prometheus.MustRegister(inotifyCount)
+	prometheus.MustRegister(statsCollectionSummary)
+	prometheus.MustRegister(subsystemStatsCollectionSummary)
 }
 
 // Watcher interface is implemented by anything watching cgroups.
@@ -42,18 +67,40 @@ type Watcher interface {
 	Stop() error
 }
 
+type collector interface {
+	GetStats(path string, stats *cgroups.Stats) error
+}
+
+type watcher struct {
+	cgroups            map[string]*cgroup
+	subsystems         map[string]collector
+	fsnotifyWatcher    *fsnotify.Watcher
+	done               chan struct{}
+	collectionInterval time.Duration
+	wg                 sync.WaitGroup
+	cgroupMu           sync.RWMutex
+}
+
+type cgroup struct {
+	name       string
+	path       string
+	stats      *cgroups.Stats
+	subcgroups map[string]*cgroup
+}
+
 // NewWatcher is a factory method for a new watcher for a number of cgroups.
-func NewWatcher(subsystems ...string) (Watcher, error) {
+func NewWatcher(statsInterval time.Duration, subsystems ...string) (Watcher, error) {
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
 
 	w := &watcher{
-		watchedSubsystems: subsystems,
-		fsnotifyWatcher:   fsWatcher,
-		done:              make(chan struct{}),
-		cgroups:           make(map[string]*cgroup, len(subsystems)),
+		subsystems:         make(map[string]collector),
+		fsnotifyWatcher:    fsWatcher,
+		done:               make(chan struct{}),
+		cgroups:            make(map[string]*cgroup, len(subsystems)),
+		collectionInterval: statsInterval,
 	}
 
 	mounts, err := cgroups.GetCgroupMounts()
@@ -61,35 +108,16 @@ func NewWatcher(subsystems ...string) (Watcher, error) {
 		return nil, err
 	}
 
-	allSubsystems := map[string]struct{}{
-		"blkio":      {},
-		"cpu":        {},
-		"cpuacct":    {},
-		"cpuset":     {},
-		"devices":    {},
-		"freezer":    {},
-		"hugetlb":    {},
-		"memory":     {},
-		"net_cls":    {},
-		"net_prio":   {},
-		"perf_event": {},
-	}
-
-	for _, subsystem := range w.watchedSubsystems {
+	for _, subsystem := range subsystems {
 		err := w.watchSubsystem(subsystem, mounts)
 		if err != nil {
-			stopErr := w.Stop()
-			if stopErr != nil {
-				log.WithFields(log.Fields{"error": stopErr}).Debug("Cannot stop watch")
-			}
 			return nil, err
 		}
-		registerSubsystemMetrics(subsystem, true)
-		delete(allSubsystems, subsystem)
 	}
 
-	for subsystem := range allSubsystems {
-		registerSubsystemMetrics(subsystem, false)
+	for _, subsystem := range allSubsystems {
+		_, ok := w.subsystems[subsystem]
+		registerSubsystemMetrics(subsystem, ok)
 	}
 
 	return w, nil
@@ -111,21 +139,6 @@ func registerSubsystemMetrics(subsystem string, enabled bool) {
 	)
 	m.Set(value)
 	prometheus.MustRegister(m)
-}
-
-type watcher struct {
-	cgroups           map[string]*cgroup
-	watchedSubsystems []string
-	fsnotifyWatcher   *fsnotify.Watcher
-	done              chan struct{}
-	wg                sync.WaitGroup
-	cgroupMu          sync.RWMutex
-}
-
-type cgroup struct {
-	name       string
-	path       string
-	subcgroups map[string]*cgroup
 }
 
 func (w *watcher) Start() error {
@@ -150,13 +163,15 @@ func (w *watcher) Start() error {
 		}
 	}
 
+	go w.startCollection()
+
 	return nil
 }
 
 func (w *watcher) watchSubsystem(subsystem string, mounts []cgroups.Mount) error {
 	for _, mount := range mounts {
-		for _, mountedSsubsystem := range mount.Subsystems {
-			if mountedSsubsystem == subsystem {
+		for _, mountedSubsystem := range mount.Subsystems {
+			if mountedSubsystem == subsystem {
 				w.initializeSubsystem(subsystem, mount)
 				return nil
 			}
@@ -166,15 +181,42 @@ func (w *watcher) watchSubsystem(subsystem string, mounts []cgroups.Mount) error
 }
 
 func (w *watcher) initializeSubsystem(subsystem string, mount cgroups.Mount) {
-	w.cgroupMu.Lock()
-	defer w.cgroupMu.Unlock()
-
 	// Sometimes cgroups share mount points, e.g. cpu,cpuacct.
 	var subcgroups map[string]*cgroup
 	for _, existingCg := range w.cgroups {
 		if existingCg.path == mount.Mountpoint {
 			subcgroups = existingCg.subcgroups
 		}
+	}
+
+	var sys collector
+	switch subsystem {
+	case "blkio":
+		sys = &fs.BlkioGroup{}
+	case "cpu":
+		sys = &fs.CpuGroup{}
+	case "cpuacct":
+		sys = &fs.CpuacctGroup{}
+	case "cpuset":
+		sys = &fs.CpusetGroup{}
+	case "devices":
+		sys = &fs.DevicesGroup{}
+	case "freezer":
+		sys = &fs.FreezerGroup{}
+	case "hugetlb":
+		sys = &fs.HugetlbGroup{}
+	case "memory":
+		sys = &fs.MemoryGroup{}
+	case "net_cls":
+		sys = &fs.NetClsGroup{}
+	case "net_prio":
+		sys = &fs.NetPrioGroup{}
+	case "perf_event":
+		sys = &fs.PerfEventGroup{}
+	}
+
+	if sys != nil {
+		w.subsystems[subsystem] = sys
 	}
 
 	if subcgroups == nil {
@@ -204,7 +246,7 @@ func (w *watcher) watch(path string) error {
 	w.cgroupMu.Lock()
 	defer w.cgroupMu.Unlock()
 
-	log.WithFields(log.Fields{"target": path}).Debug("Adding watch")
+	log.WithField("target", path).Debug("Adding watch")
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -243,7 +285,7 @@ func (w *watcher) watch(path string) error {
 	if err != nil {
 		return err
 	}
-	log.WithFields(log.Fields{"target": absPath}).Debug("Started watching cgroup dir")
+	log.WithField("target", absPath).Debug("Started watching cgroup dir")
 	inotifyCount.WithLabelValues(subsystem).Inc()
 
 	return nil
@@ -252,7 +294,7 @@ func (w *watcher) watch(path string) error {
 func (w *watcher) unwatch(path string) error {
 	w.cgroupMu.Lock()
 	defer w.cgroupMu.Unlock()
-	log.WithFields(log.Fields{"target": path}).Debug("Removing watch")
+	log.WithField("target", path).Debug("Removing watch")
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -264,7 +306,7 @@ func (w *watcher) unwatch(path string) error {
 		return fmt.Errorf("Cannot find cgroup mount point for %s", absPath)
 	}
 
-	log.WithFields(log.Fields{"target": absPath}).Debug("Stopping watching cgroup dir")
+	log.WithField("target", absPath).Debug("Stopping watching cgroup dir")
 	err = w.fsnotifyWatcher.Remove(absPath)
 	if err != nil {
 		return err
@@ -287,7 +329,7 @@ func (w *watcher) unwatch(path string) error {
 	name := filepath.Base(rel)
 	delete(parentCgroup.subcgroups, name)
 
-	log.WithFields(log.Fields{"target": absPath}).Debug("Stopped watching cgroup dir")
+	log.WithField("target", absPath).Debug("Stopped watching cgroup dir")
 
 	return nil
 }
@@ -301,7 +343,7 @@ func (w *watcher) handleEvents() {
 			switch {
 			case event.Op&fsnotify.Create == fsnotify.Create:
 				go func() {
-					log.WithFields(log.Fields{"target": event.Name}).Debug("Received create event")
+					log.WithField("target", event.Name).Debug("Received create event")
 					fi, err := os.Lstat(event.Name)
 					if err != nil {
 						log.WithFields(log.Fields{
@@ -312,7 +354,7 @@ func (w *watcher) handleEvents() {
 					}
 
 					if !fi.IsDir() {
-						log.WithFields(log.Fields{"target": event.Name}).Error("Ignoring create event - not dir")
+						log.WithField("target", event.Name).Error("Ignoring create event - not dir")
 						return
 					}
 
@@ -326,7 +368,7 @@ func (w *watcher) handleEvents() {
 				}()
 			case event.Op&fsnotify.Remove == fsnotify.Remove:
 				go func() {
-					log.WithFields(log.Fields{"target": event.Name}).Debug("Received remove event")
+					log.WithField("target", event.Name).Debug("Received remove event")
 					err := w.unwatch(event.Name)
 					if err != nil {
 						log.WithFields(log.Fields{
@@ -337,7 +379,7 @@ func (w *watcher) handleEvents() {
 				}()
 			}
 		case err := <-w.fsnotifyWatcher.Errors:
-			log.WithFields(log.Fields{"error": err}).Error("Received notify error")
+			log.WithField("error", err).Error("Received notify error")
 		case <-w.done:
 			return
 		}
@@ -349,4 +391,61 @@ func (w *watcher) Stop() error {
 	close(w.done)
 	w.wg.Wait()
 	return w.fsnotifyWatcher.Close()
+}
+
+func (w *watcher) startCollection() {
+	for {
+		select {
+		case <-time.After(w.collectionInterval):
+			w.collectStats()
+		case <-w.done:
+			log.Debug("Stopping stats collection")
+			return
+		}
+	}
+}
+
+func (w *watcher) collectStats() {
+	w.cgroupMu.Lock()
+	defer w.cgroupMu.Unlock()
+
+	log.Debug("Collecting all cgroup stats")
+
+	allStart := time.Now()
+
+	for name, rootCgroup := range w.cgroups {
+		c := w.subsystems[name]
+		if c == nil {
+			log.WithField("subsystem", name).Debug("No collector for subsystem")
+			continue
+		}
+		log.WithField("subsystem", name).Debug("Collecting cgroup stats")
+		subsystemStart := time.Now()
+		walkCgroup(rootCgroup, c)
+		subsystemElapsed := float64(time.Since(subsystemStart)) / float64(time.Microsecond)
+		subsystemStatsCollectionSummary.WithLabelValues(name).Observe(subsystemElapsed)
+
+		log.WithFields(log.Fields{"subsystem": name, "duration": time.Duration(subsystemElapsed) * time.Microsecond}).Debug("Finished collecting cgroup stats")
+	}
+
+	allElapsed := float64(time.Since(allStart)) / float64(time.Microsecond)
+	statsCollectionSummary.Observe(allElapsed)
+
+	log.WithField("duration", time.Duration(allElapsed)*time.Microsecond).Debug("Finished collecting all cgroup stats")
+}
+
+func walkCgroup(cg *cgroup, c collector) {
+	if cg.stats == nil {
+		cg.stats = cgroups.NewStats()
+	}
+	stats := cg.stats
+	err := c.GetStats(cg.path, stats)
+	if err != nil {
+		log.Error(err)
+	}
+	cg.stats = stats
+
+	for _, subCg := range cg.subcgroups {
+		walkCgroup(subCg, c)
+	}
 }

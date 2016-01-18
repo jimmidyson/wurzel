@@ -12,14 +12,14 @@
 # limitations under the License.
 
 GO   := GO15VENDOREXPERIMENT=1 go
-pkgs  = $(shell $(GO) list ./... | grep -v /vendor/)
+pkgs = $(shell $(GO) list ./... | grep -v /vendor/)
 linters := --enable=vet --enable=deadcode --enable=golint --enable=varcheck --enable=structcheck --enable=aligncheck --enable=errcheck --enable=ineffassign --enable=interfacer --enable=goimports --disable=gocyclo --enable=gofmt --disable=gotype --disable=dupl
 
 all: format build lint test bench
 
 test:
 	@echo ">> running tests"
-	@$(GO) test -short -race -v $(pkgs) | tee /dev/tty | go-junit-report > $${CIRCLE_TEST_REPORTS:-.}/junit.xml
+	@OUTPUT=`$(GO) test -short -race -v $(pkgs)` && echo "$${OUTPUT}" | tee /dev/tty | go-junit-report -set-exit-code > $${CIRCLE_TEST_REPORTS:-.}/junit.xml
 
 bench:
 	@echo ">> running benchmarks"

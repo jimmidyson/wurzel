@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -11,9 +12,9 @@ import (
 )
 
 // Run starts the daemon.
-func Run(cgroups []string) {
+func Run(cgroups []string, statsInterval time.Duration) {
 	log.WithFields(log.Fields{"cgroups": cgroups}).Debug("Enabled cgroups")
-	w, err := cgroup.NewWatcher(cgroups...)
+	w, err := cgroup.NewWatcher(statsInterval, cgroups...)
 	if err != nil {
 		log.Fatal(err)
 	}

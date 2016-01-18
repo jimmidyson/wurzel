@@ -67,6 +67,8 @@ func init() {
 
 	addStringFlag(RootCmd.PersistentFlags(), "listen-address", ":8080", "the address to listen on for API requests")
 	addStringFlag(RootCmd.PersistentFlags(), "cgroups", "blkio,cpu,cpuacct,cpuset,devices,freezer,hugetlb,memory,net_cls,net_prio,perf_event", "enabled cgroups (comma-separated)")
+	addDurationFlag(RootCmd.PersistentFlags(), "cgroups-stats-interval", 10*time.Second, "cgroup stats collection interval")
+	addBoolFlag(RootCmd.PersistentFlags(), "disable-cgroups-stats", false, "disable cgroup stats collection")
 	addStringFlag(RootCmd.PersistentFlags(), "debug-address", "localhost:6060", "the address to listen on for debug/profile requests")
 
 	addBoolPFlag(RootCmd.PersistentFlags(), "verbose", "v", false, "verbose output")

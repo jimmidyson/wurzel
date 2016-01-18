@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -27,6 +29,12 @@ func addBoolFlag(flags *pflag.FlagSet, name string, def bool, desc string) {
 
 func addBoolPFlag(flags *pflag.FlagSet, name, shorthand string, def bool, desc string) {
 	flags.BoolP(name, shorthand, def, desc)
+	bindPFlag(flags, name)
+	viper.SetDefault(name, def)
+}
+
+func addDurationFlag(flags *pflag.FlagSet, name string, def time.Duration, desc string) {
+	flags.Duration(name, def, desc)
 	bindPFlag(flags, name)
 	viper.SetDefault(name, def)
 }

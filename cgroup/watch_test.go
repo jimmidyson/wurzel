@@ -10,7 +10,7 @@ func TestWatch(t *testing.T) {
 		t.Skip("skipping cgroup watch test")
 	}
 
-	w, err := NewWatcher("cpu")
+	w, err := NewWatcher(1*time.Second, "cpu")
 	if err != nil {
 		t.Errorf("%v", err)
 	}

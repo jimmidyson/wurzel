@@ -15,7 +15,7 @@ var (
 		Short: "Start a daemon with REST API to monitor your server remotely",
 		Long:  `Start a daemon with REST API to monitor your server remotely.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			daemon.Run(strings.Split(viper.GetString("cgroups"), ","))
+			daemon.Run(strings.Split(viper.GetString("cgroups"), ","), viper.GetDuration("cgroups-stats-interval"))
 		},
 	}
 )
