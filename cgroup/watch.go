@@ -14,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/fsnotify.v1"
 
+	"github.com/jimmidyson/wurzel/api/v1"
 	"github.com/jimmidyson/wurzel/metrics"
 )
 
@@ -69,6 +70,7 @@ type Watcher interface {
 
 type collector interface {
 	GetStats(path string, stats *cgroups.Stats) error
+	Name() string
 }
 
 type watcher struct {
@@ -84,7 +86,7 @@ type watcher struct {
 type cgroup struct {
 	name       string
 	path       string
-	stats      *cgroups.Stats
+	stats      *v1.Stats
 	subcgroups map[string]*cgroup
 }
 
@@ -435,15 +437,23 @@ func (w *watcher) collectStats() {
 }
 
 func walkCgroup(cg *cgroup, c collector) {
-	if cg.stats == nil {
-		cg.stats = cgroups.NewStats()
-	}
-	stats := cg.stats
+	stats := cgroups.NewStats()
 	err := c.GetStats(cg.path, stats)
 	if err != nil {
 		log.Error(err)
 	}
-	cg.stats = stats
+	switch c.Name() {
+	case "blkio":
+		cg.stats = &v1.Stats{BlkioStats: convertBlkio(stats.BlkioStats)}
+	case "cpu":
+		cg.stats = &v1.Stats{CPUStats: &v1.CPUStats{ThrottlingData: convertCPUThrottlingData(stats.CpuStats.ThrottlingData)}}
+	case "cpuacct":
+		cg.stats = &v1.Stats{CPUStats: &v1.CPUStats{CPUUsage: convertCPUUsage(stats.CpuStats.CpuUsage)}}
+	case "hugetlb":
+		cg.stats = &v1.Stats{HugetlbStats: convertHugetlbStats(stats.HugetlbStats)}
+	case "memory":
+		cg.stats = &v1.Stats{MemoryStats: convertMemory(stats.MemoryStats)}
+	}
 
 	for _, subCg := range cg.subcgroups {
 		walkCgroup(subCg, c)

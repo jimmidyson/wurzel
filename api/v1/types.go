@@ -96,3 +96,101 @@ type ProcessMemoryEx struct {
 	Data   uint64 `json:"data"`
 	Dirty  uint64 `json:"dirty"`
 }
+
+// ThrottlingData holds data on CPU throttling.
+type ThrottlingData struct {
+	// Number of periods with throttling active
+	Periods uint64 `json:"periods,omitempty"`
+	// Number of periods when the container hit its throttling limit.
+	ThrottledPeriods uint64 `json:"throttled_periods,omitempty"`
+	// Aggregate time the container was throttled for in nanoseconds.
+	ThrottledTime uint64 `json:"throttled_time,omitempty"`
+}
+
+// CPUUsage holds all CPU stats, aggregated since cgroup inception.
+type CPUUsage struct {
+	// Total CPU time consumed.
+	// Units: nanoseconds.
+	TotalUsage uint64 `json:"total_usage,omitempty"`
+	// Total CPU time consumed per core.
+	// Units: nanoseconds.
+	PerCPUUsage []uint64 `json:"percpu_usage,omitempty"`
+	// Time spent by tasks of the cgroup in kernel mode.
+	// Units: nanoseconds.
+	UsageInKernelmode uint64 `json:"usage_in_kernelmode"`
+	// Time spent by tasks of the cgroup in user mode.
+	// Units: nanoseconds.
+	UsageInUsermode uint64 `json:"usage_in_usermode"`
+}
+
+// CPUStats holds stats on CPU usage.
+type CPUStats struct {
+	CPUUsage       *CPUUsage       `json:"cpu_usage,omitempty"`
+	ThrottlingData *ThrottlingData `json:"throttling_data,omitempty"`
+}
+
+// MemoryData holds stats on memory usage.
+type MemoryData struct {
+	Usage    uint64 `json:"usage,omitempty"`
+	MaxUsage uint64 `json:"max_usage,omitempty"`
+	Failcnt  uint64 `json:"failcnt"`
+}
+
+// MemoryStats holds stats on memory.
+type MemoryStats struct {
+	// memory used for cache
+	Cache uint64 `json:"cache,omitempty"`
+	// usage of memory
+	Usage MemoryData `json:"usage,omitempty"`
+	// usage of memory + swap
+	SwapUsage MemoryData `json:"swap_usage,omitempty"`
+	// usafe of kernel memory
+	KernelUsage MemoryData        `json:"kernel_usage,omitempty"`
+	Stats       map[string]uint64 `json:"stats,omitempty"`
+}
+
+// PIDsStats holds stats of process IDs.
+type PIDsStats struct {
+	// number of pids in the cgroup
+	Current uint64 `json:"current,omitempty"`
+}
+
+// BlkioStatEntry holds stats on single blkio.
+type BlkioStatEntry struct {
+	Major uint64 `json:"major,omitempty"`
+	Minor uint64 `json:"minor,omitempty"`
+	Op    string `json:"op,omitempty"`
+	Value uint64 `json:"value,omitempty"`
+}
+
+// BlkioStats holds block device stats.
+type BlkioStats struct {
+	// number of bytes tranferred to and from the block device
+	IoServiceBytesRecursive []BlkioStatEntry `json:"io_service_bytes_recursive,omitempty"`
+	IoServicedRecursive     []BlkioStatEntry `json:"io_serviced_recursive,omitempty"`
+	IoQueuedRecursive       []BlkioStatEntry `json:"io_queue_recursive,omitempty"`
+	IoServiceTimeRecursive  []BlkioStatEntry `json:"io_service_time_recursive,omitempty"`
+	IoWaitTimeRecursive     []BlkioStatEntry `json:"io_wait_time_recursive,omitempty"`
+	IoMergedRecursive       []BlkioStatEntry `json:"io_merged_recursive,omitempty"`
+	IoTimeRecursive         []BlkioStatEntry `json:"io_time_recursive,omitempty"`
+	SectorsRecursive        []BlkioStatEntry `json:"sectors_recursive,omitempty"`
+}
+
+// HugetlbStats holds stats on hugetlb.
+type HugetlbStats struct {
+	// current res_counter usage for hugetlb
+	Usage uint64 `json:"usage,omitempty"`
+	// maximum usage ever recorded.
+	MaxUsage uint64 `json:"max_usage,omitempty"`
+	// number of times htgetlb usage allocation failure.
+	Failcnt uint64 `json:"failcnt"`
+}
+
+// Stats holds cgroup stats.
+type Stats struct {
+	CPUStats    *CPUStats    `json:"cpu_stats,omitempty"`
+	MemoryStats *MemoryStats `json:"memory_stats,omitempty"`
+	BlkioStats  *BlkioStats  `json:"blkio_stats,omitempty"`
+	// the map is in the format "size of hugepage: stats of the hugepage"
+	HugetlbStats map[string]HugetlbStats `json:"hugetlb_stats,omitempty"`
+}
