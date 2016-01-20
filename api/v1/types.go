@@ -149,12 +149,6 @@ type MemoryStats struct {
 	Stats       map[string]uint64 `json:"stats,omitempty"`
 }
 
-// PIDsStats holds stats of process IDs.
-type PIDsStats struct {
-	// number of pids in the cgroup
-	Current uint64 `json:"current,omitempty"`
-}
-
 // BlkioStatEntry holds stats on single blkio.
 type BlkioStatEntry struct {
 	Major uint64 `json:"major,omitempty"`

@@ -21,6 +21,20 @@
 			"path": "/quantile"
 		},
 		{
+			"importpath": "github.com/coreos/go-systemd/dbus",
+			"repository": "https://github.com/coreos/go-systemd",
+			"revision": "2ed5b5012ccde5f057c197890a2c801295941149",
+			"branch": "master",
+			"path": "/dbus"
+		},
+		{
+			"importpath": "github.com/coreos/go-systemd/util",
+			"repository": "https://github.com/coreos/go-systemd",
+			"revision": "2ed5b5012ccde5f057c197890a2c801295941149",
+			"branch": "master",
+			"path": "/util"
+		},
+		{
 			"importpath": "github.com/cpuguy83/go-md2man/md2man",
 			"repository": "https://github.com/cpuguy83/go-md2man",
 			"revision": "71acacd42f85e5e82f70a55327789582a5200a90",
@@ -35,6 +49,20 @@
 			"path": "/pkg/mount"
 		},
 		{
+			"importpath": "github.com/docker/docker/pkg/symlink",
+			"repository": "https://github.com/docker/docker",
+			"revision": "bdcc3ebe4168a72a0f12d171e674905f2fb40d01",
+			"branch": "master",
+			"path": "/pkg/symlink"
+		},
+		{
+			"importpath": "github.com/docker/docker/pkg/system",
+			"repository": "https://github.com/docker/docker",
+			"revision": "bdcc3ebe4168a72a0f12d171e674905f2fb40d01",
+			"branch": "master",
+			"path": "/pkg/system"
+		},
+		{
 			"importpath": "github.com/docker/docker/pkg/units",
 			"repository": "https://github.com/docker/docker",
 			"revision": "a34a1d598c6096ed8b5ce5219e77d68e5cd85462",
@@ -42,9 +70,21 @@
 			"path": "/pkg/units"
 		},
 		{
+			"importpath": "github.com/docker/go-units",
+			"repository": "https://github.com/docker/go-units",
+			"revision": "0bbddae09c5a5419a8c6dcdd7ff90da3d450393b",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/gizak/termui",
 			"repository": "https://github.com/gizak/termui",
 			"revision": "0cb4aedd6f67dbc6c4b182e51bfde56e1c68adcd",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/godbus/dbus",
+			"repository": "https://github.com/godbus/dbus",
+			"revision": "e4593d66e29678c26f84166fe231a03e0268ced5",
 			"branch": "master"
 		},
 		{
@@ -118,8 +158,8 @@
 		{
 			"importpath": "github.com/opencontainers/runc/libcontainer",
 			"repository": "https://github.com/opencontainers/runc",
-			"revision": "97bc9a7faf3dd660d9be90a2880b2e37f3cdbf38",
-			"branch": "HEAD",
+			"revision": "e91b055623293ebadc22088e21ad15766f838336",
+			"branch": "master",
 			"path": "/libcontainer"
 		},
 		{
@@ -208,6 +248,19 @@
 			"importpath": "github.com/spf13/viper",
 			"repository": "https://github.com/spf13/viper",
 			"revision": "a212099cbe6fbe8d07476bfda8d2d39b6ff8f325",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/syndtr/gocapability/capability",
+			"repository": "https://github.com/syndtr/gocapability",
+			"revision": "2c00daeb6c3b45114c80ac44119e7b8801fdd852",
+			"branch": "master",
+			"path": "/capability"
+		},
+		{
+			"importpath": "github.com/vishvananda/netlink",
+			"repository": "https://github.com/vishvananda/netlink",
+			"revision": "5a5eb317d73bc513ae0cfea7d9ac3c39f145e1db",
 			"branch": "master"
 		},
 		{
