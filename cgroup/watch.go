@@ -210,7 +210,7 @@ func (w *watcher) findCgroupMountpoint(path string) (string, string) {
 func (w *watcher) findCgroup(subsystem, relPath string) *cgroup {
 	cg := w.cgroups[subsystem]
 
-	spl := strings.Split(filepath.Dir(relPath), string(os.PathSeparator))
+	spl := strings.Split(relPath, string(os.PathSeparator))
 	for _, s := range spl {
 		if s != "." {
 			cg = cg.subcgroups[s]
@@ -247,7 +247,7 @@ func (w *watcher) watch(path string) error {
 		return relErr
 	}
 
-	parentCgroup := w.findCgroup(subsystem, rel)
+	parentCgroup := w.findCgroup(subsystem, filepath.Dir(rel))
 
 	name := filepath.Base(absPath)
 
@@ -270,8 +270,6 @@ func (w *watcher) watch(path string) error {
 }
 
 func (w *watcher) unwatch(path string) error {
-	w.cgroupMu.Lock()
-	defer w.cgroupMu.Unlock()
 	log.WithField("target", path).Debug("Removing watch")
 
 	absPath, err := filepath.Abs(path)
@@ -287,7 +285,9 @@ func (w *watcher) unwatch(path string) error {
 	log.WithField("target", absPath).Debug("Stopping watch")
 	err = w.fsnotifyWatcher.Remove(absPath)
 	if err != nil {
-		return err
+		if !strings.HasPrefix(err.Error(), "can't remove non-existent inotify watch for") || !os.IsNotExist(err) {
+			return err
+		}
 	}
 
 	inotifyCount.WithLabelValues(subsystem).Dec()
@@ -399,7 +399,7 @@ func (w *watcher) handleEvents() {
 						log.WithFields(log.Fields{"error": err, "target": absPath}).Error("Cannot find relative path")
 						return
 					}
-					err = w.updatePIDs(filepath.Dir(event.Name), w.findCgroup(subsystem, rel))
+					err = w.updatePIDs(filepath.Dir(event.Name), w.findCgroup(subsystem, filepath.Dir(rel)))
 
 					if err != nil {
 						log.WithFields(log.Fields{

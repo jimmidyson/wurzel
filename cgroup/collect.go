@@ -1,6 +1,7 @@
 package cgroup
 
 import (
+	"os"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -120,7 +121,7 @@ func cgroupStats(path string, c collector) *v1.Stats {
 	stats := cgroups.NewStats()
 
 	err := c.GetStats(path, stats)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		log.Error(err)
 	}
 
