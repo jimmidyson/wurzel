@@ -2,6 +2,7 @@ package cgroup
 
 import (
 	"os"
+	"sync/atomic"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -69,10 +70,12 @@ func subsystemCollector(subsystem string) collector {
 }
 
 func (w *watcher) startCollection() {
+	ticker := time.NewTicker(w.collectionInterval).C
+	go w.collectStats(time.Now())
 	for {
 		select {
-		case <-time.After(w.collectionInterval):
-			w.collectStats()
+		case t := <-ticker:
+			go w.collectStats(t)
 		case <-w.done:
 			log.Debug("Stopping stats collection")
 			return
@@ -80,13 +83,21 @@ func (w *watcher) startCollection() {
 	}
 }
 
-func (w *watcher) collectStats() {
+var collecting uint32
+
+func (w *watcher) collectStats(startTime time.Time) {
+	if !atomic.CompareAndSwapUint32(&collecting, 0, 1) {
+		log.Error("Time taken for collection is greater than the configured collection interval - skipping collection this time. You need to increase collection interval.")
+		return
+	}
+	defer atomic.StoreUint32(&collecting, 0)
+
 	w.cgroupMu.Lock()
 	defer w.cgroupMu.Unlock()
 
 	log.Debug("Collecting all cgroup stats")
 
-	allStart := time.Now()
+	allStart := startTime
 
 	for name, rootCgroup := range w.cgroups {
 		c := w.subsystems[name]
