@@ -26,12 +26,21 @@ const (
 var (
 	allSubsystems = []string{"blkio", "cpu", "cpuacct", "cpuset", "devices", "freezer", "hugetlb", "memory", "net_cls", "net_prio", "perf_event"}
 
-	inotifyCount = prometheus.NewGaugeVec(
+	inotifyCount = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Namespace: metrics.Namespace,
 			Subsystem: MetricsSubsystem,
 			Name:      "fsnotify_count_current",
 			Help:      "The current number of fs notifies labeled by subsystem.",
+		},
+	)
+
+	cgroupCount = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metrics.Namespace,
+			Subsystem: MetricsSubsystem,
+			Name:      "cgroup_count_current",
+			Help:      "The current number of cgroups in each subsystem.",
 		},
 		[]string{"subsystem"},
 	)
@@ -39,6 +48,7 @@ var (
 
 func init() {
 	prometheus.MustRegister(inotifyCount)
+	prometheus.MustRegister(cgroupCount)
 	prometheus.MustRegister(statsCollectionSummary)
 	prometheus.MustRegister(subsystemStatsCollectionSummary)
 }
@@ -197,14 +207,15 @@ func (w *watcher) initializeSubsystem(subsystem string, mount cgroups.Mount) {
 	log.WithFields(log.Fields{"subsystem": subsystem, "path": mount.Mountpoint}).Info("Initialized subsystem")
 }
 
-func (w *watcher) findCgroupMountpoint(path string) (string, string) {
+func (w *watcher) findCgroupMountpoints(path string) map[string]string {
+	subsystemMap := map[string]string{}
 	for _, cg := range w.cgroups {
 		if strings.HasPrefix(path, cg.path) {
-			return cg.name, cg.path
+			subsystemMap[cg.name] = cg.path
 		}
 	}
 
-	return "", ""
+	return subsystemMap
 }
 
 func (w *watcher) findCgroup(subsystem, relPath string) *cgroup {
@@ -228,9 +239,9 @@ func (w *watcher) watch(path string) error {
 		return err
 	}
 
-	subsystem, cgroupMountPoint := w.findCgroupMountpoint(absPath)
-	if cgroupMountPoint == "" {
-		return fmt.Errorf("Cannot find cgroup mount point for %s", absPath)
+	subsystemMountPoints := w.findCgroupMountpoints(absPath)
+	if len(subsystemMountPoints) == 0 {
+		return fmt.Errorf("Cannot find cgroup mount point(s) for %s", absPath)
 	}
 
 	err = w.fsnotifyWatcher.Add(absPath)
@@ -241,29 +252,40 @@ func (w *watcher) watch(path string) error {
 		}
 		return err
 	}
+	inotifyCount.Inc()
 
-	rel, relErr := filepath.Rel(cgroupMountPoint, absPath)
-	if relErr != nil {
-		return relErr
-	}
-
-	parentCgroup := w.findCgroup(subsystem, filepath.Dir(rel))
-
-	name := filepath.Base(absPath)
-
-	if name == fs.CgroupProcesses {
-		err := w.updatePIDs(filepath.Dir(absPath), parentCgroup)
-		if err != nil {
-			return err
+	firstLoop := true
+	for subsystem, cgroupMountPoint := range subsystemMountPoints {
+		if filepath.Base(absPath) != fs.CgroupProcesses {
+			cgroupCount.WithLabelValues(subsystem).Inc()
 		}
-	} else if absPath != parentCgroup.path {
-		parentCgroup.subcgroups[name] = &cgroup{
-			name:       name,
-			path:       absPath,
-			subcgroups: make(map[string]*cgroup),
+
+		if firstLoop {
+			rel, relErr := filepath.Rel(cgroupMountPoint, absPath)
+			if relErr != nil {
+				return relErr
+			}
+
+			parentCgroup := w.findCgroup(subsystem, filepath.Dir(rel))
+
+			name := filepath.Base(absPath)
+
+			if name == fs.CgroupProcesses {
+				err := w.updatePIDs(filepath.Dir(absPath), parentCgroup)
+				if err != nil {
+					return err
+				}
+			} else if absPath != parentCgroup.path {
+				parentCgroup.subcgroups[name] = &cgroup{
+					name:       name,
+					path:       absPath,
+					subcgroups: make(map[string]*cgroup),
+				}
+				log.WithField("target", absPath).Debug("Started watching cgroup dir")
+			}
+
+			firstLoop = false
 		}
-		log.WithField("target", absPath).Debug("Started watching cgroup dir")
-		inotifyCount.WithLabelValues(subsystem).Inc()
 	}
 
 	return nil
@@ -277,9 +299,9 @@ func (w *watcher) unwatch(path string) error {
 		return err
 	}
 
-	subsystem, cgroupMountPoint := w.findCgroupMountpoint(absPath)
-	if cgroupMountPoint == "" {
-		return fmt.Errorf("Cannot find cgroup mount point for %s", absPath)
+	subsystemMountPoints := w.findCgroupMountpoints(absPath)
+	if len(subsystemMountPoints) == 0 {
+		return fmt.Errorf("Cannot find cgroup mount point(s) for %s", absPath)
 	}
 
 	log.WithField("target", absPath).Debug("Stopping watch")
@@ -289,21 +311,39 @@ func (w *watcher) unwatch(path string) error {
 			return err
 		}
 	}
+	inotifyCount.Dec()
 
-	inotifyCount.WithLabelValues(subsystem).Dec()
+	firstLoop := true
+	for subsystem, cgroupMountPoint := range subsystemMountPoints {
+		if filepath.Base(absPath) != fs.CgroupProcesses {
+			cgroupCount.WithLabelValues(subsystem).Dec()
+		}
 
-	rel, err := filepath.Rel(cgroupMountPoint, absPath)
-	if err != nil {
-		return err
-	}
+		if firstLoop {
+			rel, err := filepath.Rel(cgroupMountPoint, absPath)
+			if err != nil {
+				return err
+			}
 
-	cg := w.findCgroup(subsystem, filepath.Dir(rel))
-
-	if filepath.Base(absPath) == fs.CgroupProcesses {
-		cg.pids = nil
-	} else {
-		name := filepath.Base(rel)
-		delete(cg.subcgroups, name)
+			cg := w.findCgroup(subsystem, filepath.Dir(rel))
+			if cg != nil {
+				if filepath.Base(absPath) == fs.CgroupProcesses {
+					cg.pids = nil
+				} else {
+					name := filepath.Base(rel)
+					delete(cg.subcgroups, name)
+					procsFile := filepath.Join(path, fs.CgroupProcesses)
+					err := w.unwatch(procsFile)
+					if err != nil {
+						log.WithFields(log.Fields{
+							"target": procsFile,
+							"error":  err,
+						}).Error("Failed to remove watch")
+					}
+				}
+			}
+			firstLoop = false
+		}
 	}
 
 	log.WithField("target", absPath).Debug("Stopped watch")
@@ -388,24 +428,26 @@ func (w *watcher) handleEvents() {
 						return
 					}
 
-					subsystem, cgroupMountPoint := w.findCgroupMountpoint(absPath)
-					if cgroupMountPoint == "" {
+					subsystemMountPoints := w.findCgroupMountpoints(absPath)
+					if len(subsystemMountPoints) == 0 {
 						log.WithField("target", absPath).Error("Cannot find cgroup mount point")
 						return
 					}
 
-					rel, relErr := filepath.Rel(cgroupMountPoint, absPath)
-					if relErr != nil {
-						log.WithFields(log.Fields{"error": err, "target": absPath}).Error("Cannot find relative path")
-						return
-					}
-					err = w.updatePIDs(filepath.Dir(event.Name), w.findCgroup(subsystem, filepath.Dir(rel)))
+					for subsystem, cgroupMountPoint := range subsystemMountPoints {
+						rel, relErr := filepath.Rel(cgroupMountPoint, absPath)
+						if relErr != nil {
+							log.WithFields(log.Fields{"error": err, "target": absPath}).Error("Cannot find relative path")
+							return
+						}
+						err = w.updatePIDs(filepath.Dir(event.Name), w.findCgroup(subsystem, filepath.Dir(rel)))
 
-					if err != nil {
-						log.WithFields(log.Fields{
-							"target": event.Name,
-							"error":  err,
-						}).Error("Failed to update pids")
+						if err != nil {
+							log.WithFields(log.Fields{
+								"target": event.Name,
+								"error":  err,
+							}).Error("Failed to update pids")
+						}
 					}
 				}()
 			}
